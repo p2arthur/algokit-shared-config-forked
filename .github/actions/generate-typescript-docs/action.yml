@@ -1,0 +1,18 @@
+name: "Build Typedoc Documentation"
+description: "Checks out code, installs dependencies, and runs the documentation build command."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - name: Npm install
+      run: npm ci --ignore-scripts
+      shell: bash
+    - name: Build doc (Run typedoc)
+      run: npm run generate:code-docs
+      shell: bash

@@ -1,0 +1,58 @@
+name: "Run typedoc and publish to pages"
+
+on:
+  workflow_call:
+    secrets:
+      BOT_SK:
+        required: true
+      BOT_ID:
+        required: true
+
+  workflow_dispatch:
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Build Typedoc Documentation
+        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ci/handle_docs
+
+      # This step packages the generated docs as an artifact for the next action - different environments
+      - name: Upload Documentation Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages-docs
+          path: docs/_html # The path your build action creates
+          retention-days: 1
+
+  publish-docs:
+    needs: build-docs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      # This step downloads the artifact created in the previous job - different environments
+      - name: Download Documentation Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages-docs # Must match the name used in the upload step
+          path: docs/downloaded # Download the artifact content here
+
+      - name: Deploy Documentation
+        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/handle_docs
+        # Inputs to be used on the publish-docs action
+        with:
+          # This line was indented incorrectly and needed a single colon/value.
+          # The download action puts the artifact contents into the download path.
+          # The contents are the files from docs/_html. The path to the files is:
+          # [Download Path] / [Artifact Name]
+          artifact_path: docs/downloaded
+          bot_id: ${{ secrets.BOT_ID }}
+          bot_sk: ${{ secrets.BOT_SK }}
