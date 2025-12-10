@@ -1,0 +1,269 @@
+name: Publish Docs to Algorand Developer Portal
+
+on:
+  workflow_call:
+    inputs:
+      docs_path:
+        description: "Location relative to the repo root of the docs folder"
+        type: string
+        required: false
+        default: "docs"
+      docs_branch:
+        description: "Name of the branch to publish the docs to"
+        type: string
+        required: false
+        default: "docs-dist"
+
+jobs:
+  publish-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect documentation generator
+        id: detect_generator
+        run: |
+          docs_path="${{ inputs.docs_path }}"
+          tool="other"
+          version="unknown"
+
+          # Check for Sphinx
+          if [[ -f "${docs_path}/conf.py" ]] || [[ -f "conf.py" ]]; then
+            tool="sphinx"
+            if command -v sphinx-build &> /dev/null; then
+              version=$(sphinx-build --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' || echo "unknown")
+            fi
+          # Check for TypeDoc
+          elif [[ -f "typedoc.json" ]] || grep -q '"typedoc"' package.json 2>/dev/null; then
+            tool="typedoc"
+            if [[ -f "package.json" ]]; then
+              version=$(jq -r '.devDependencies.typedoc // .dependencies.typedoc // "unknown"' package.json | tr -d '^~')
+            fi
+          # Check for JSDoc
+          elif [[ -f "jsdoc.json" ]] || [[ -f ".jsdoc.json" ]] || grep -q '"jsdoc"' package.json 2>/dev/null; then
+            tool="jsdoc"
+            if [[ -f "package.json" ]]; then
+              version=$(jq -r '.devDependencies.jsdoc // .dependencies.jsdoc // "unknown"' package.json | tr -d '^~')
+            fi
+          fi
+
+          echo "tool=$tool" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Generate manifest.json
+        run: |
+          docs_path="${{ inputs.docs_path }}"
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          commit_sha="${{ github.sha }}"
+          repository="${{ github.repository }}"
+          tool="${{ steps.detect_generator.outputs.tool }}"
+          version="${{ steps.detect_generator.outputs.version }}"
+
+          cat > "${docs_path}/manifest.json" << EOF
+          {
+            "generated": "${timestamp}",
+            "generator": {
+              "tool": "${tool}",
+              "version": "${version}"
+            },
+            "metadata": {
+              "repository": "${repository}",
+              "commit": "${commit_sha}"
+            }
+          }
+          EOF
+
+          echo "Generated manifest.json:"
+          cat "${docs_path}/manifest.json"
+
+      - name: Determine docs target
+        id: docs_target
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            tag="${{ github.event.release.tag_name }}"
+            if [[ -z "$tag" ]]; then
+              echo "Release event missing tag_name" >&2
+              exit 1
+            fi
+            # Strip leading 'v' if present to get clean version
+            version="${tag#v}"
+            target="v${version}"
+            update_latest="true"
+          else
+            target="latest"
+            update_latest="false"
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "update_latest=$update_latest" >> "$GITHUB_OUTPUT"
+          echo "Publishing to: $target (update_latest: $update_latest)"
+
+      - name: Checkout docs branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.docs_branch }}
+          path: docs-branch
+        continue-on-error: true
+
+      - name: Prepare publish workspace
+        run: |
+          docs_path="${{ inputs.docs_path }}"
+          target="${{ steps.docs_target.outputs.target }}"
+
+          # Start with existing docs branch content (if it exists)
+          if [[ -d "docs-branch" ]]; then
+            rm -rf docs-branch/.git
+            mv docs-branch publish-staging
+          else
+            mkdir -p publish-staging
+          fi
+
+          # Overwrite target version folder
+          rm -rf "publish-staging/${target}"
+          mkdir -p "publish-staging/${target}"
+          cp -R "${docs_path}/." "publish-staging/${target}/"
+
+          # Overwrite latest folder on release
+          if [[ "${{ steps.docs_target.outputs.update_latest }}" == "true" ]]; then
+            rm -rf "publish-staging/latest"
+            mkdir -p "publish-staging/latest"
+            cp -R "${docs_path}/." "publish-staging/latest/"
+          fi
+
+      - name: Publish docs branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: publish-staging
+          publish_branch: ${{ inputs.docs_branch }}
+          keep_files: false
+
+      - name: Notify DevPortal of Documentation Update
+        if: success()
+        id: notify-devportal
+        run: |
+          set -euo pipefail
+
+          echo "📤 Notifying DevPortal of documentation update..."
+
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          REPO_FULL="${{ github.repository }}"
+          DISPATCH_REPO="${{ vars.DEVPORTAL_REPO || 'algorandfoundation/devportal' }}"
+          DISPATCH_BRANCH="${{ vars.DOCS_BRANCH || 'docs-dist' }}"
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="v${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#vv}"
+            TRIGGER_EVENT="release"
+            TRIGGER_REASON="Release ${{ github.event.release.tag_name }}: ${{ github.event.release.name }}"
+          else
+            VERSION="latest"
+            TRIGGER_EVENT="manual"
+            TRIGGER_REASON="${{ github.event.inputs.reason || 'Manual documentation update' }}"
+          fi
+          COMMIT_URL="${{ github.event.head_commit.url || github.event.release.html_url || github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          TIMESTAMP="${{ github.event.head_commit.timestamp || github.event.release.created_at || github.event.repository.updated_at }}"
+
+          echo "Repository: $REPO_FULL"
+          echo "Version: $VERSION"
+          echo "Trigger: $TRIGGER_EVENT"
+          echo "Dispatch repository: $DISPATCH_REPO"
+          echo "Docs branch: $DISPATCH_BRANCH"
+          if [[ -z "${DEVPORTAL_DISPATCH_TOKEN:-}" ]]; then
+            echo "⚠️ DEVPORTAL_DISPATCH_TOKEN is empty or missing"
+          else
+            echo "DEVPORTAL_DISPATCH_TOKEN detected (masked)"
+          fi
+
+          PAYLOAD_FILE="/tmp/devportal-dispatch-payload.json"
+          jq -n \
+            --arg source_repo "$REPO_FULL" \
+            --arg source_owner "$REPO_OWNER" \
+            --arg source_name "$REPO_NAME" \
+            --arg ref "${{ github.sha }}" \
+            --arg branch "$DISPATCH_BRANCH" \
+            --arg version "$VERSION" \
+            --arg trigger_event "$TRIGGER_EVENT" \
+            --arg trigger_reason "$TRIGGER_REASON" \
+            --arg commit_url "$COMMIT_URL" \
+            --arg timestamp "$TIMESTAMP" \
+            '{event_type:"docs_updated", client_payload:{source_repo:$source_repo, source_owner:$source_owner, source_name:$source_name, ref:$ref, branch:$branch, version:$version, trigger_event:$trigger_event, trigger_reason:$trigger_reason, commit_url:$commit_url, timestamp:$timestamp}}' \
+            > "$PAYLOAD_FILE"
+
+          echo "Dispatch payload:"
+          cat "$PAYLOAD_FILE"
+
+          HTTP_STATUS=$(curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.DEVPORTAL_DISPATCH_TOKEN }}" \
+            -H "User-Agent: $REPO_NAME-docs" \
+            -w "%{http_code}" \
+            -o /tmp/response.json \
+            -s \
+            https://api.github.com/repos/$DISPATCH_REPO/dispatches \
+            -d @"$PAYLOAD_FILE")
+
+          if [ "$HTTP_STATUS" -eq 204 ]; then
+            echo "✅ DevPortal notification sent successfully"
+            echo "devportal_notified=true" >> "$GITHUB_OUTPUT"
+          elif [ "$HTTP_STATUS" -eq 404 ]; then
+            echo "❌ DevPortal repository not found or token lacks access"
+            echo "devportal_notified=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          elif [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 403 ]; then
+            echo "❌ Authentication failed. Check DEVPORTAL_DISPATCH_TOKEN"
+            echo "devportal_notified=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          else
+            echo "⚠️ Unexpected response: HTTP $HTTP_STATUS"
+            if [ -f /tmp/response.json ]; then
+              echo "Response body:"
+              cat /tmp/response.json
+            fi
+            echo "devportal_notified=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+        env:
+          DEVPORTAL_DISPATCH_TOKEN: ${{ secrets.DEVPORTAL_DISPATCH_TOKEN }}
+        continue-on-error: true
+
+      - name: Handle DevPortal Notification Status
+        if: always()
+        run: |
+          if [ "${{ steps.notify-devportal.outputs.devportal_notified }}" = "true" ]; then
+            echo "📚 Documentation has been published and DevPortal has been notified"
+            echo "The DevPortal will create a PR to import the documentation"
+          elif [ -z "${{ secrets.DEVPORTAL_DISPATCH_TOKEN }}" ]; then
+            echo "⚠️ DEVPORTAL_DISPATCH_TOKEN not configured"
+            echo "Documentation has been published to docs-dist branch but DevPortal was not notified"
+            echo "Add DEVPORTAL_DISPATCH_TOKEN to repository secrets to enable automatic imports"
+          else
+            echo "⚠️ DevPortal notification failed but documentation was still published to docs-dist branch"
+            echo "You may need to trigger the import manually"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Documentation Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: \`${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version target**: \`${{ steps.docs_target.outputs.target || 'latest' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation Branch**: \`${{ env.DOCS_BRANCH }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "- **Build Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Build Status**: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.notify-devportal.outputs.devportal_notified }}" = "true" ]; then
+            echo "- **DevPortal Notification**: ✅ Sent" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📝 The DevPortal was notified and will import this documentation." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **DevPortal Notification**: ⚠️ Not sent" >> $GITHUB_STEP_SUMMARY
+          fi
