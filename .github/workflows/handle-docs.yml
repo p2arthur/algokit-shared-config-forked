@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Typedoc Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ci/handle_docs
+        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ci/enforce_docs_config
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -43,7 +43,7 @@ jobs:
           path: docs/downloaded
 
       - name: Deploy Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/handle_docs
+        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/enforce_docs_config
         with:
           artifact_path: docs/downloaded
           bot_id: ${{ secrets.BOT_ID }}
