@@ -1,13 +1,6 @@
 name: "Run typedoc and publish to pages"
 
 on:
-  workflow_call:
-    secrets:
-      BOT_SK:
-        required: true
-      BOT_ID:
-        required: true
-
   workflow_dispatch:
 
 jobs:

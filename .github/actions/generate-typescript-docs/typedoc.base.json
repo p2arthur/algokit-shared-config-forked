@@ -14,7 +14,7 @@
   "readme": "docs/README.md",
   "gitRevision": "main",
   "tsconfig": "tsconfig.build.json",
-  "highlightLanguages": ["typescript", "python", "json"],
+  "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
   "excludeReferences": true,
   "includeHierarchySummary": true
 }
