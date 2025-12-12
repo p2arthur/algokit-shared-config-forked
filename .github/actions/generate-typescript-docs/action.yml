@@ -15,9 +15,9 @@ runs:
       run: npm ci
       shell: bash
 
-    - name: Copy Typedoc Base Config
+    - name: Generate Dynamic TypeDoc Config
       shell: bash
-      run: cp "${GITHUB_ACTION_PATH}/${{ inputs.base_config_path }}" ./typedoc.base.json
+      run: node "${{ github.action_path }}/generate-typedoc-config.js"
 
     - name: Build doc (Run typedoc)
       shell: bash

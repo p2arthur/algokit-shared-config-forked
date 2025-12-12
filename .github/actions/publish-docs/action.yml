@@ -2,9 +2,19 @@ name: "Publish Documentation"
 description: "A composite action to upload and deploy documentation artifacts to GitHub Pages."
 
 inputs:
+  artifact_path:
+    description: "The path to the documentation artifact to publish (e.g., docs/_html)"
+    required: true
+    type: string
+
 runs:
   using: "composite"
   steps:
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{ inputs.artifact_path }}
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
