@@ -2,11 +2,6 @@ name: "Run typedoc and publish to pages"
 
 on:
   workflow_call:
-    inputs:
-      github_token:
-        description: "GitHub token to interact with the repository"
-        required: true
-        type: string
 
 jobs:
   build-docs:
@@ -44,4 +39,3 @@ jobs:
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/reusable_docs_generation
         with:
           artifact_path: docs/downloaded
-          github_token: ${{ inputs.github_token }}
