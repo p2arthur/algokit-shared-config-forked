@@ -18,12 +18,10 @@ jobs:
         with:
           base_config_path: "typedoc.base.json"
 
-      - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages-docs
-          path: docs/_html
-          retention-days: 1
+          path: docs/_html # The path where typedoc outputs the HTML
 
   publish-docs:
     needs: build-docs
@@ -32,13 +30,5 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - name: Download Documentation Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages-docs
-          path: docs/downloaded
-
       - name: Deploy Documentation
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/extended-typedoc
-        with:
-          artifact_path: docs/downloaded
