@@ -2,6 +2,11 @@ name: "Run typedoc and publish to pages"
 
 on:
   workflow_call:
+    inputs:
+      github_token:
+        description: "GitHub token to interact with the repository"
+        required: true
+        type: string
 
 jobs:
   build-docs:
@@ -29,13 +34,6 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - name: Generate bot token
-        uses: actions/create-github-app-token@v1
-        id: app_token
-        with:
-          app_id: ${{ secrets.BOT_ID}}
-          private_key: ${{ secrets.BOT_SK }}
-
       - name: Download Documentation Artifact
         uses: actions/download-artifact@v4
         with:
@@ -46,4 +44,4 @@ jobs:
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/reusable_docs_generation
         with:
           artifact_path: docs/downloaded
-          bot_token: ${{ steps.app_token.outputs.token }}
+          bot_token: ${{ inputs.github_token }}
