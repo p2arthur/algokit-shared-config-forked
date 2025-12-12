@@ -15,13 +15,15 @@ jobs:
 
       - name: Build Typedoc Documentation
         uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ci/extended-typedoc
+        with:
+          base_config_path: "${{ github.action_path }}/typedoc.base.json"
+
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages-docs
           path: docs/_html
           retention-days: 1
-          base_config_path: "${{ github.action_path }}/typedoc.base.json"
 
   publish-docs:
     needs: build-docs
