@@ -39,3 +39,55 @@ jobs:
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@main
         with:
           artifact_path: docs/downloaded
+
+    devportal-update:
+      needs: [build-docs, publish-docs] # Runs only after docs are built AND deployed
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write # Needed for the called workflow to push to docs-dist
+      steps:
+        - name: Checkout Source Code (for devportal scripts)
+          uses: actions/checkout@v4
+
+        # --- JOB 1: MANAGE DOCS-DIST BRANCH ---
+        # Calls the reusable workflow in the segregated devportal folder
+        - name: Call Docs Dist Publishing
+          uses: ./.github/workflows/devportal/publish-docs-dist.yml
+          id: publish_dist
+          with:
+            artifact_name: github-pages-docs
+            # The docs are in the root of the artifact download (docs/_html)
+            docs_path_in_artifact: "."
+            docs_branch: "docs-dist"
+
+        # --- JOB 2: NOTIFY DEVPORTAL REPO ---
+        - name: Setup Node.js (for notification script)
+          if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - name: Notify DevPortal of Documentation Update
+          # Only run if the docs-dist branch actually changed
+          if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
+          id: notify-devportal
+          run: node devportal/scripts/notify-devportal.mjs && echo "devportal_notified=true" >> "$GITHUB_OUTPUT" || echo "devportal_notified=false" >> "$GITHUB_OUTPUT"
+          env:
+            # Pass required secrets and environment variables for the dispatch script
+            GITHUB_REPOSITORY: ${{ github.repository }}
+            GITHUB_SHA: ${{ github.sha }}
+            GITHUB_EVENT_NAME: ${{ github.event_name }}
+            DEVPORTAL_DISPATCH_TOKEN: ${{ secrets.DEVPORTAL_DISPATCH_TOKEN }}
+            DOCS_BRANCH: "docs-dist"
+            GITHUB_EVENT_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+            GITHUB_EVENT_INPUTS_REASON: ${{ github.event.inputs.reason || inputs.devportal_reason }}
+          continue-on-error: true
+
+        - name: Summary
+          if: always()
+          run: |
+            # ... (Your existing summary logic adapted for the new steps/outputs)
+            # ... (Example uses steps.publish_dist.outputs.target and steps.notify-devportal.outputs.devportal_notified)
+            echo "## Documentation Publish Summary" >> $GITHUB_STEP_SUMMARY
+            echo "- **Docs Dist Branch Status**: ${{ steps.publish_dist.outputs.pushed_to_dist == 'true' && '✅ Updated' || '⚠️ No changes' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **DevPortal Notification**: ${{ steps.notify-devportal.outputs.devportal_notified == 'true' && '✅ Sent' || '⚠️ Not Sent' }}" >> $GITHUB_STEP_SUMMARY

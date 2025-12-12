@@ -1,0 +1,43 @@
+# ------------------------------------------------------------------------
+# 3. DEV PORTAL COORDINATION (Simplified to local pushes and mocked notify)
+# ------------------------------------------------------------------------
+devportal-update:
+  needs: [build-docs, publish-docs]
+  runs-on: ubuntu-latest
+  permissions:
+    # Still need contents:write for the called workflow to push to the local docs-dist branch
+    contents: write
+  steps:
+    - name: Checkout Source Code (for devportal scripts)
+      uses: actions/checkout@v4
+
+    # 1. MANAGE DOCS-DIST BRANCH (Local verification only)
+    # This still pushes to the docs-dist branch in your current (test) repository.
+    - name: Call Docs Dist Publishing
+      uses: ./.github/workflows/devportal/publish-docs-dist.yml
+      id: publish_dist
+      with:
+        artifact_name: github-pages-docs
+        docs_path_in_artifact: "."
+        docs_branch: "docs-dist"
+
+    # 2. MOCK NOTIFY DEVPORTAL REPO
+    - name: Setup Node.js (for notification script)
+      if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Mock DevPortal Notification
+      if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
+      id: notify-devportal
+      # This calls the script which is now hard-coded to skip the API call
+      run: node devportal/scripts/notify-devportal-test.mjs
+      continue-on-error: true
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "## Documentation Publish Summary (TEST ENVIRONMENT)" >> $GITHUB_STEP_SUMMARY
+        echo "- **Docs Dist Branch Status**: ${{ steps.publish_dist.outputs.pushed_to_dist == 'true' && '✅ Updated' || '⚠️ No changes' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **DevPortal Notification**: ✅ Skipped (Running in Test Mode)" >> $GITHUB_STEP_SUMMARY
