@@ -1,20 +1,26 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts", "src/types/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "tests/**/*.*", "examples/**/*.*"],
+  "theme": "default",
+  "cleanOutputDir": true,
+  "githubPages": true,
+  "gitRevision": "main",
+  "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
+  "exclude": [
+    "**/*.spec.ts",
+    "tests/**/*.*",
+    "examples/**/*.*"
+  ],
+  "excludeInternal": true,
+  "excludeReferences": true,
+  "plugin": ["typedoc-plugin-markdown"],
   "entryPointStrategy": "expand",
+  "includeHierarchySummary": true,
+  "out": "docs/_api", 
   "outputs": [
     { "name": "html", "path": "docs/_html" },
     { "name": "markdown", "path": "docs/code" }
   ],
-  "plugin": ["typedoc-plugin-markdown"],
-  "theme": "default",
-  "cleanOutputDir": true,
-  "githubPages": true,
-  "readme": "docs/README.md",
-  "gitRevision": "main",
-  "tsconfig": "tsconfig.build.json",
-  "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
-  "excludeReferences": true,
-  "includeHierarchySummary": true
+
+  "readme": "none", 
+  "tsconfig": "tsconfig.build.json" 
 }
