@@ -21,7 +21,6 @@ jobs:
           name: github-pages-docs
           path: docs/_html
           retention-days: 1
-          
 
   publish-docs:
     needs: build-docs
@@ -30,14 +29,12 @@ jobs:
       pages: write
       id-token: write
     steps:
-    - name: Generate bot token
-      uses: actions/create-github-app-token@v1
-      id: app_token
-      with:
-        app_id: ${{ secrets.BOT_ID}}
-        private_key: ${{ secrets.BOT_SK }}
-
-
+      - name: Generate bot token
+        uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app_id: ${{ secrets.BOT_ID}}
+          private_key: ${{ secrets.BOT_SK }}
 
       - name: Download Documentation Artifact
         uses: actions/download-artifact@v4
