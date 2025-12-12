@@ -49,35 +49,43 @@ jobs:
   # ------------------------------------------------------------------------
   # 3. DEV PORTAL COORDINATION (The previously nested job, now corrected)
   # ------------------------------------------------------------------------
-  devportal-update: # <--- CORRECTLY PLACED as a direct child of 'jobs:'
+  manage-docs-dist-branch: # <-- New Job Name
     needs: [build-docs, publish-docs]
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed for the called workflow to push to docs-dist
+      contents: write
+    # 🛑 CORRECT SYNTAX: Use 'uses:' at the job level to call a reusable workflow
+    uses: ./.github/workflows/devportal/publish-docs-dist.yml
+    with:
+      artifact_name: github-pages-docs
+      docs_path_in_artifact: "."
+      docs_branch: "docs-dist"
+    # Outputs are handled by the reusable workflow definition
+
+  # ------------------------------------------------------------------------
+  # 4. DEV PORTAL NOTIFICATION (Job 2 - Mocks the notify script)
+  # ------------------------------------------------------------------------
+  mock-devportal-notify: # <-- New Job Name
+    needs: [build-docs, manage-docs-dist-branch] # Now depends on the branch management job
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Only read is needed for checkout and running the script
+
+    # Check the output of the reusable workflow job
+    if: needs.manage-docs-dist-branch.outputs.pushed_to_dist == 'true'
+
     steps:
       - name: Checkout Source Code (for devportal scripts)
         uses: actions/checkout@v4
 
-      # 1. MANAGE DOCS-DIST BRANCH (Local verification only)
-      - name: Call Docs Dist Publishing
-        uses: ./.github/workflows/devportal/publish-docs-dist.yml
-        id: publish_dist
-        with:
-          artifact_name: github-pages-docs
-          docs_path_in_artifact: "."
-          docs_branch: "docs-dist"
-
-      # 2. MOCK NOTIFY DEVPORTAL REPO
-      - name: Setup Node.js (for notification script)
-        if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Mock DevPortal Notification
-        if: success() && steps.publish_dist.outputs.pushed_to_dist == 'true'
         id: notify-devportal
-        # Ensuring you use the correct script name from the latest context: notify-devportal.mjs or notify-devportal-test.mjs
+        # Use the mocked script
         run: node devportal/scripts/notify-devportal-test.mjs
         continue-on-error: true
 
@@ -85,5 +93,5 @@ jobs:
         if: always()
         run: |
           echo "## Documentation Publish Summary (TEST ENVIRONMENT)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Docs Dist Branch Status**: ${{ steps.publish_dist.outputs.pushed_to_dist == 'true' && '✅ Updated' || '⚠️ No changes' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docs Dist Branch Status**: ${{ needs.manage-docs-dist-branch.outputs.pushed_to_dist == 'true' && '✅ Updated' || '⚠️ No changes' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **DevPortal Notification**: ✅ Skipped (Running in Test Mode)" >> $GITHUB_STEP_SUMMARY
