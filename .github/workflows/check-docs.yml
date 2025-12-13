@@ -1,11 +1,9 @@
-name: Publish
+# File: .github/workflows/publish.yml
+
+name: Publish - Reusable
 
 on:
-  push:
-    branches:
-      - main
-      - release
-  workflow_dispatch:
+  workflow_call:
 
 concurrency: release
 
