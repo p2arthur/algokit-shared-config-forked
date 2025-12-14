@@ -1,0 +1,49 @@
+name: "Run NPM Dependency Install and Build"
+description: "Runs npm ci --ignore-scripts, npm rebuild, and npm run build."
+
+inputs:
+  npm-auth-token:
+    description: "NPM auth token (required as an ENV variable for build/ci steps)."
+    required: true
+  pre-run-script:
+    description: "Optional script to run before dependency install."
+    required: false
+  working-directory:
+    description: "The working directory."
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+  steps:
+    - name: 🔨 Pre-run Script (Optional)
+      if: ${{ inputs.pre-run-script }}
+      shell: bash
+      run: ${{ inputs.pre-run-script }}
+      working-directory: ${{ inputs.working-directory }}
+
+    # Uses the security pattern from the original workflow
+    - name: ⬇️ Install Dependencies (npm ci --ignore-scripts)
+      shell: bash
+      run: npm ci --ignore-scripts
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        # Pass the token for any CDK or infrastructure steps that may run npm ci
+        NODE_AUTH_TOKEN: ${{ inputs.npm-auth-token }}
+
+    - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)
+      shell: bash
+      run: npm rebuild && npm run prepare --if-present
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: Prepare
+      shell: bash
+      run: npm run prepare --if-present
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: 🏗️ Build Project
+      shell: bash
+      run: npm run build
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.npm-auth-token }}

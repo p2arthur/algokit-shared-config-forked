@@ -1,0 +1,40 @@
+name: "Setup Node.js and Authentication"
+description: "Checks out code, sets up Node.js, and configures NPM/GitHub auth for private packages."
+
+inputs:
+  node-version:
+    description: "The Node.js version to use."
+    required: false
+    default: "20.x"
+  working-directory:
+    description: "The working directory for subsequent steps."
+    required: false
+    default: "."
+  npm-auth-token:
+    description: "NPM auth token for private package access."
+    required: true
+  github-token:
+    description: "GITHUB_TOKEN for checkout and GitHub package access."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: ⚙️ Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ inputs.github-token }} # Use the provided token for private repo checkout
+        fetch-depth: 0
+
+    - name: 🟢 Set up Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "npm"
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: 🔑 Configure NPM Auth
+      shell: bash
+      run: |
+        # Use the dedicated NPM token to create the .npmrc file
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.npm-auth-token }}" > .npmrc
