@@ -1,18 +1,15 @@
 name: On Merge to Main
 
 on:
-  # push:
-  #   branches:
-  #     - main
   workflow_call:
     secrets:
-      npm-auth-token:
+      NPM_AUTH_TOKEN: # <-- Change to uppercase for consistency
         description: Custom NPM auth token for private package access.
         required: true
-      github-token:
+      GITHUB_TOKEN: # <-- Change to uppercase for consistency
         description: The GITHUB_TOKEN required for checkout and GitHub package access.
         required: true
-      bot-token:
+      BOT_TOKEN:
         description: The Bot Token for committing changes back to the repository.
         required: true
 jobs:
@@ -31,7 +28,7 @@ jobs:
       build-path: dist
       artifact-name: package
     secrets:
-      npm-auth-token: ${{ secrets.NPM_TOKEN }}
+      npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
   check_docs:
@@ -47,4 +44,4 @@ jobs:
     needs: [check_docs, generate-publish-docs]
     uses: algorandfoundation/algokit-shared-config/.github/actions/release-package.yml@ci/release-workflow
     with:
-      bot-token: ${{ secrets.bot-token }}
+      bot-token: ${{ secrets.BOT_TOKEN }}

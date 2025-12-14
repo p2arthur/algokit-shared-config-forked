@@ -38,10 +38,10 @@ on:
         default: .env.sample
         description: Path to the .env file containing environment variable keys.
     secrets:
-      npm-auth-token:
+      NPM_AUTH_TOKEN:
         description: Custom NPM auth token for private package access.
         required: true
-      github-token:
+      GITHUB_TOKEN:
         description: The GITHUB_TOKEN required for checkout and GitHub package access.
         required: true
 
@@ -55,8 +55,8 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           working-directory: ${{ inputs.working-directory }}
-          npm-auth-token: ${{ secrets.npm-auth-token }}
-          github-token: ${{ secrets.github-token }}
+          npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 2. Prepare Static Site Config Transformation
         if: ${{ inputs.static-site }}
