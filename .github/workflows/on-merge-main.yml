@@ -27,7 +27,6 @@ jobs:
       node-version: 20.x
       build-path: dist
       artifact-name: package
-    secrets:
       NPM_AUTH_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}
       GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
 
