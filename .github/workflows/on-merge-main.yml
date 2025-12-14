@@ -3,7 +3,7 @@ name: On Merge to Main
 on:
   workflow_call:
     secrets:
-      NPM_AUTH_TOKEN: # <-- Change to uppercase for consistency
+      NPM_TOKEN: # <-- Change to uppercase for consistency
         description: Custom NPM auth token for private package access.
         required: true
       GITHUB_TOKEN: # <-- Change to uppercase for consistency
@@ -28,7 +28,7 @@ jobs:
       build-path: dist
       artifact-name: package
     secrets:
-      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check_docs:

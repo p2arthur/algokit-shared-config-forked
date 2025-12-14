@@ -38,7 +38,7 @@ on:
         default: .env.sample
         description: Path to the .env file containing environment variable keys.
     secrets:
-      NPM_AUTH_TOKEN:
+      NPM_TOKEN:
         description: Custom NPM auth token for private package access.
         required: true
       GITHUB_TOKEN:
@@ -55,8 +55,8 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           working-directory: ${{ inputs.working-directory }}
-          npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 2. Prepare Static Site Config Transformation
         if: ${{ inputs.static-site }}
@@ -68,7 +68,7 @@ jobs:
       - name: 3. Run Build Scripts
         uses: algorandfoundation/algokit-shared-config/.github/actions/run-build@ci/ak-node-build # Adjust path as needed
         with:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           pre-run-script: ${{ inputs.pre-run-script }}
           working-directory: ${{ inputs.working-directory }}
 

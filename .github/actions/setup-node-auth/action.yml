@@ -10,10 +10,10 @@ inputs:
     description: "The working directory for subsequent steps."
     required: false
     default: "."
-  npm-auth-token:
+  NPM_TOKEN:
     description: "NPM auth token for private package access."
     required: true
-  github-token:
+  GITHUB_TOKEN:
     description: "GITHUB_TOKEN for checkout and GitHub package access."
     required: true
 
@@ -23,7 +23,7 @@ runs:
     - name: ⚙️ Checkout Repository
       uses: actions/checkout@v4
       with:
-        token: ${{ inputs.github-token }} # Use the provided token for private repo checkout
+        token: ${{ inputs.GITHUB_TOKEN }} # Use the provided token for private repo checkout
         fetch-depth: 0
 
     - name: 🟢 Set up Node.js ${{ inputs.node-version }}
@@ -37,4 +37,4 @@ runs:
       shell: bash
       run: |
         # Use the dedicated NPM token to create the .npmrc file
-        echo "//npm.pkg.github.com/:_authToken=${{ inputs.npm-auth-token }}" > .npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.NPM_TOKEN }}" > .npmrc

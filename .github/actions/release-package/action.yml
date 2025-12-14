@@ -5,7 +5,7 @@ inputs:
   BOT_TOKEN:
     description: The Bot Token for committing changes back to the repository.
     required: true
-  NPM_AUTH_TOKEN:
+  NPM_TOKEN:
     description: Custom NPM auth token for private package access.
     required: true
 
@@ -34,4 +34,4 @@ runs:
       run: npx semantic-release@latest
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
-        NPM_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}
+        NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
