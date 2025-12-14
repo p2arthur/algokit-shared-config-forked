@@ -2,7 +2,7 @@ name: On Merge to Main
 
 on:
   workflow_call:
-    inputs:
+    secrets:
       NPM_AUTH_TOKEN: # <-- Change to uppercase for consistency
         description: Custom NPM auth token for private package access.
         required: true
@@ -27,8 +27,8 @@ jobs:
       node-version: 20.x
       build-path: dist
       artifact-name: package
-      NPM_AUTH_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}
-      GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check_docs:
     name: Check docs are up to date
@@ -43,4 +43,4 @@ jobs:
     needs: [check_docs, generate-publish-docs]
     uses: algorandfoundation/algokit-shared-config/.github/actions/release-package.yml@ci/release-workflow
     with:
-      BOT_TOKEN: ${{ inputs.BOT_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
