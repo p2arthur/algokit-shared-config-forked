@@ -2,7 +2,7 @@ name: "Run NPM Dependency Install and Build"
 description: "Runs npm ci --ignore-scripts, npm rebuild, and npm run build."
 
 inputs:
-  npm-auth-token:
+  NPM_AUTH_TOKEN:
     description: "NPM auth token (required as an ENV variable for build/ci steps)."
     required: true
   pre-run-script:
@@ -46,4 +46,4 @@ runs:
       run: npm run build
       working-directory: ${{ inputs.working-directory }}
       env:
-        NODE_AUTH_TOKEN: ${{ inputs.npm-auth-token }}
+        NODE_AUTH_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}
