@@ -54,8 +54,8 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           working-directory: ${{ inputs.working-directory }}
-          npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          npm-auth-token: ${{ inputs.NPM_AUTH_TOKEN }}
+          github-token: ${{ inputs.GITHUB_TOKEN }}
 
       - name: 2. Prepare Static Site Config Transformation
         if: ${{ inputs.static-site }}
@@ -67,7 +67,7 @@ jobs:
       - name: 3. Run Build Scripts
         uses: algorandfoundation/algokit-shared-config/.github/actions/run-build@ci/ak-node-build # Adjust path as needed
         with:
-          npm-auth-token: ${{ secrets.npm-auth-token }}
+          NPM_AUTH_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}
           pre-run-script: ${{ inputs.pre-run-script }}
           working-directory: ${{ inputs.working-directory }}
 
