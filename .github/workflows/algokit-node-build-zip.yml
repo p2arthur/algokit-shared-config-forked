@@ -1,0 +1,140 @@
+# .github/workflows/algokit-node-build-zip.yml
+name: Generic Node.js Build and Zip
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: 20.x
+      working-directory:
+        required: false
+        type: string
+        default: "."
+      build-path:
+        required: false
+        type: string
+        default: dist # Updated default to common 'dist' folder
+      artifact-name:
+        required: false
+        type: string
+        default: node-artifact
+      static-site:
+        required: false
+        type: boolean
+        default: false
+        description: Set to true for static sites to enable build-time environment variable substitution.
+      static-site-env-prefix:
+        required: false
+        type: string
+        default: VITE
+        description: Environment variable prefix (e.g., VITE for Vite, REACT_APP for CRA).
+      pre-run-script:
+        required: false
+        type: string
+      sample-env-path:
+        required: false
+        type: string
+        default: .env.sample
+        description: Path to the .env file containing environment variable keys.
+    secrets:
+      npm-auth-token:
+        description: NPM auth token for private package access (optional, GITHUB_TOKEN is used by default)
+        required: false
+      github-token:
+        description: GITHUB_TOKEN for package access. Defaults to ${{ github.token }}
+        required: false
+        default: ${{ github.token }} # Set a default for use in env context
+
+jobs:
+  build-zip:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: ⚙️ Checkout Repository
+        uses: actions/checkout@v4
+
+      # --- Setup Node.js ---
+
+      - name: 🟢 Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          # REMOVED: Specific 'registry-url' and 'scope' for Makerx
+          cache: "npm"
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      # --- Authentication Setup ---
+
+      - name: 🔑 Configure NPM Auth (For Private Packages)
+        if: ${{ secrets.npm-auth-token || secrets.github-token }}
+        run: |
+          # Use the provided npm-auth-token or the default GITHUB_TOKEN
+          TOKEN=${{ secrets.npm-auth-token || secrets.github-token }}
+          # Configure GitHub Package Registry access
+          echo "//npm.pkg.github.com/:_authToken=${TOKEN}" > .npmrc
+        shell: bash
+
+      # --- Pre-Build Steps ---
+
+      - name: 🔨 Pre-run Script (Optional)
+        if: ${{ inputs.pre-run-script }}
+        run: ${{ inputs.pre-run-script }}
+
+      - name: 🌐 Prepare Static Site Config Transformation
+        if: ${{ inputs.static-site }}
+        # This copies environment variable keys from .env.sample into a temporary .env file
+        # using a placeholder `{{VAR_NAME}}`. This placeholder is typically replaced
+        # by the deployment tool (e.g., CDK/CloudFormation) later.
+        run: |
+          sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
+        shell: bash
+
+      # --- Dependency Installation ---
+
+      - name: ⬇️ Install Dependencies (npm ci --ignore-scripts)
+        # We restore the three-step pattern (ci --ignore-scripts, rebuild, prepare)
+        # because the original MakerX workflow used it for security and robustness.
+        # It's a best practice to install dependencies without running arbitrary scripts
+        # during the initial install.
+        run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
+
+      - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)
+        # This safely executes necessary post-install scripts (like binary compilation)
+        # outside of the initial install step, still preventing access to auth tokens.
+        run: npm rebuild && npm run prepare --if-present
+
+      - name: Prepare
+        run: npm run prepare --if-present
+
+      # --- Build Step ---
+
+      - name: 🏗️ Build Project
+        # Relies on the standard 'build' script defined in package.json (e.g., your rollup/rimraf chain)
+        run: npm run build
+        env:
+          # Token is passed here because certain build steps (like CDK infra builds) may also need it
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
+
+      # --- Artifact Creation and Upload ---
+
+      - name: 🗜️ Zip build folder
+        # This handles the specific requirement from the original 'node-build-zip.yml'
+        run: pushd ${{ inputs.build-path}}; zip -q -r ../${{ inputs.artifact-name }}.zip *; popd
+        shell: bash
+
+      - name: ⬆️ Upload Zipped Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          # Path points to the newly created ZIP file
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-name }}.zip
+          if-no-files-found: error
