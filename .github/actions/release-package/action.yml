@@ -20,6 +20,7 @@ runs:
       uses: actions/setup-node@v3
       with:
         node-version: 20
+
     - name: Download built package artifact
       uses: actions/download-artifact@v4
       with:
@@ -30,13 +31,13 @@ runs:
       shell: bash
       run: unzip artifacts/package.zip -d dist
 
-    - name: Install dependencies for semantic release
+    - name: Install semantic-release
       shell: bash
-      run: npm ci --prefix release-package --ignore-scripts
+      run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
 
     - name: Run Semantic Release
       shell: bash
-      run: npx semantic-release@latest
+      run: npx semantic-release
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
