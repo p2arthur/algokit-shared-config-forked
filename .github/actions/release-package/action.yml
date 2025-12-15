@@ -16,8 +16,6 @@ runs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ inputs.BOT_TOKEN }}
-        persist-credentials: true
 
     - name: Set Git user as GitHub actions
       shell: bash
