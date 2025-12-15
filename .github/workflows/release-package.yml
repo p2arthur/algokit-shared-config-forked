@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
 
       - name: Release Package
-        uses: ./.github/actions/release-package
+        uses: algorandfoundation/algokit-shared-config/.github/actions/release-package@ci/release-workflow
         with:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
