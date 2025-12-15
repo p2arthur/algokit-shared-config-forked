@@ -22,7 +22,7 @@ jobs:
 
   build:
     name: Build and Zip Package
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ci/reusable_node_build_zip
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ci/release-workflow
     with:
       node-version: 20.x
       build-path: dist
