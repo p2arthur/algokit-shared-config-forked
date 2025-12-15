@@ -6,8 +6,8 @@ on:
       NPM_TOKEN: # <-- Change to uppercase for consistency
         description: Custom NPM auth token for private package access.
         required: true
-      GITHUB_TOKEN: # <-- Change to uppercase for consistency
-        description: The GITHUB_TOKEN required for checkout and GitHub package access.
+      GH_TOKEN:
+        description: GitHub token required for checkout and GitHub package access.
         required: true
       BOT_TOKEN:
         description: The Bot Token for committing changes back to the repository.
@@ -29,7 +29,7 @@ jobs:
       artifact-name: package
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   check_docs:
     name: Check docs are up to date
