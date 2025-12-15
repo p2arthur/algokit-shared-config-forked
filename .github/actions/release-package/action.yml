@@ -35,6 +35,7 @@ runs:
       run: npm ci --prefix release-package --ignore-scripts
 
     - name: Run Semantic Release
+      shell: bash
       run: npx semantic-release@latest
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
