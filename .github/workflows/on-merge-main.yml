@@ -29,7 +29,7 @@ jobs:
       artifact-name: package
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   check_docs:
     name: Check docs are up to date
