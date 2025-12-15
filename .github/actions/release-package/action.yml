@@ -46,6 +46,7 @@ runs:
 
     - name: Run Semantic Release
       shell: bash
+      working-directory: ${{ github.workspace }}
       env:
         # Pass authentication tokens
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
