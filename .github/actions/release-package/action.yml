@@ -13,7 +13,9 @@ runs:
   using: "composite"
   steps:
     - name: Set Git user as GitHub actions
+      shell: bash
       run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+
     - name: Use node 20
       uses: actions/setup-node@v3
       with:
@@ -25,9 +27,11 @@ runs:
         path: artifacts
 
     - name: Unzip package
+      shell: bash
       run: unzip artifacts/package.zip -d dist
 
     - name: Install dependencies for semantic release
+      shell: bash
       run: npm ci --prefix release-package --ignore-scripts
 
     - name: Run Semantic Release
