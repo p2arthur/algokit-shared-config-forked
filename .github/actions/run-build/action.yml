@@ -29,7 +29,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         # Pass the token for any CDK or infrastructure steps that may run npm ci
-        NODE_AUTH_TOKEN: ${{ inputs.npm-auth-token }}
+        NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
 
     - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)
       shell: bash
