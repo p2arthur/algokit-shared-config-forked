@@ -27,5 +27,4 @@ runs:
     - name: 🔑 Configure NPM Auth
       shell: bash
       run: |
-        # Use the dedicated NPM token to create the .npmrc file
         echo "//npm.pkg.github.com/:_authToken=${{ inputs.NPM_TOKEN }}" > .npmrc

@@ -3,7 +3,7 @@ name: On Merge to Main
 on:
   workflow_call:
     secrets:
-      NPM_TOKEN: # <-- Change to uppercase for consistency
+      NPM_TOKEN:
         description: Custom NPM auth token for private package access.
         required: true
       GH_TOKEN:
@@ -22,7 +22,8 @@ jobs:
 
   build:
     name: Build and Zip Package
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ci/release-workflow
+    needs: ci
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@pr/release-workflow
     with:
       node-version: 20.x
       build-path: dist
@@ -32,17 +33,19 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   check_docs:
+    needs: ci
     name: Check docs are up to date
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/check-docs.yml@ci/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/check-docs.yml@pr/release-workflow
 
   generate-publish-docs:
+    needs: check_docs
     name: Publish docs
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ci/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@pr/release-workflow
 
   release:
     name: Release Package
     needs: [ci, build, check_docs, generate-publish-docs]
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ci/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@pr/release-workflow
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

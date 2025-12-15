@@ -15,7 +15,6 @@ runs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        # fetch-depth: 0 is correct for semantic-release to read all commit history
         fetch-depth: 0
 
     - name: Set Git user as GitHub actions
@@ -37,9 +36,6 @@ runs:
       shell: bash
       run: unzip artifacts/package.zip -d dist
 
-    # Note: It's generally better to use 'npm ci --prefix' for dependencies
-    # instead of 'npm install -g' if you have a local package.json with deps.
-    # Assuming this step is correct for your global semantic-release setup.
     - name: Install semantic-release
       shell: bash
       run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
@@ -48,16 +44,6 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
-        # Pass authentication tokens
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
-
-        # 🚨 FIX 1: Set the CI environment variable to ensure semantic-release runs in CI mode
-        CI: "true"
-
-        # 🚨 FIX 2: Explicitly pass the branch name to fix the ERELEASEBRANCHES error.
-        # This tells semantic-release what branch context it should be in.
-        # $GITHUB_REF_NAME contains the branch name (e.g., 'ci/ak-node-build' or 'main').
-        BRANCH: ${{ github.ref_name }} #
-
       run: npx semantic-release
