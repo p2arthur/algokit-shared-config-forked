@@ -1,0 +1,33 @@
+name: Release Package
+
+on:
+  workflow_call:
+    secrets:
+      BOT_TOKEN:
+        description: The Bot Token for committing changes back to the repository.
+        required: true
+      NPM_TOKEN:
+        description: NPM auth token for publishing packages.
+        required: false
+
+jobs:
+  release:
+    name: Release Package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Release Package
+        uses: ./.github/actions/release-package
+        with:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
