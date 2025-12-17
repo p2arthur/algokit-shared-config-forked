@@ -6,7 +6,7 @@
   "outputs": [{ "name": "markdown", "path": "docs/api" }],
   "plugin": ["typedoc-plugin-markdown"],
   "cleanOutputDir": true,
-  "readme": "docs/README.md",
+  "readme": "docs/guides/README.md",
   "gitRevision": "main",
   "tsconfig": "tsconfig.build.json",
   "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
