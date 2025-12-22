@@ -76,24 +76,64 @@ runs:
         echo "target=$target" >> "$GITHUB_OUTPUT"
         echo "Publishing to: $target"
 
-    - name: Publish docs to target version
-      uses: peaceiris/actions-gh-pages@v4
+    - name: Checkout docs branch
+      uses: actions/checkout@v4
       with:
-        github_token: ${{ inputs.github_token }}
-        publish_dir: ${{ inputs.docs_path }}
-        publish_branch: ${{ inputs.docs_branch }}
-        destination_dir: ${{ steps.docs_target.outputs.target }}
-        keep_files: true
+        ref: ${{ inputs.docs_branch }}
+        path: docs-branch-temp
+      continue-on-error: true
 
-    - name: Publish docs to latest (on release)
-      if: github.event_name == 'release'
+    - name: Clear target directories
+      shell: bash
+      run: |
+        target="${{ steps.docs_target.outputs.target }}"
+
+        # Remove target version directory if it exists
+        if [[ -d "docs-branch-temp/${target}" ]]; then
+          rm -rf "docs-branch-temp/${target}"
+          echo "🗑️  Cleared existing ${target} directory"
+        fi
+
+        # Also remove latest directory on release
+        if [[ "${{ github.event_name }}" == "release" ]] && [[ -d "docs-branch-temp/latest" ]]; then
+          rm -rf "docs-branch-temp/latest"
+          echo "🗑️  Cleared existing latest directory"
+        fi
+
+        # Remove the .git directory to avoid conflicts
+        rm -rf docs-branch-temp/.git
+
+        # Use this as the base for publishing
+        mkdir -p publish-staging
+        if [[ -d "docs-branch-temp" ]]; then
+          cp -R docs-branch-temp/. publish-staging/
+        fi
+        rm -rf docs-branch-temp
+
+    - name: Stage new docs
+      shell: bash
+      run: |
+        target="${{ steps.docs_target.outputs.target }}"
+
+        # Copy new docs to target version
+        mkdir -p "publish-staging/${target}"
+        cp -R "${{ inputs.docs_path }}/." "publish-staging/${target}/"
+        echo "✅ Staged docs for ${target}"
+
+        # Also copy to latest on release
+        if [[ "${{ github.event_name }}" == "release" ]]; then
+          mkdir -p "publish-staging/latest"
+          cp -R "${{ inputs.docs_path }}/." "publish-staging/latest/"
+          echo "✅ Staged docs for latest"
+        fi
+
+    - name: Publish docs branch
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ inputs.github_token }}
-        publish_dir: ${{ inputs.docs_path }}
+        publish_dir: publish-staging
         publish_branch: ${{ inputs.docs_branch }}
-        destination_dir: latest
-        keep_files: true
+        keep_files: false
 
     - name: Summary
       if: always()
