@@ -48,7 +48,6 @@ runs:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
       run: |
-        |
         echo "🔍 DEBUG: Checking Token Availability..."
 
         if [ -z "${GITHUB_TOKEN}" ]; then
