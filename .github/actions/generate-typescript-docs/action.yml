@@ -24,9 +24,14 @@ runs:
       working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        # We execute the binary located in the SHARED action folder.
-        # But we run it HERE, in the workspace root.
+        echo "🚀 Installing tools on-the-fly and generating docs..."
 
-        "${{ github.action_path }}/node_modules/.bin/typedoc" \
-          --options "typedoc.json" \
-          --plugin "${{ github.action_path }}/node_modules/typedoc-plugin-markdown"
+        # npx installs these packages into a temporary cache.
+        # It runs inside the workspace, so it finds your 'typedoc.json' and 'tsconfig.json' automatically.
+        npx --yes \
+          -p typescript \
+          -p typedoc@^0.28.15 \
+          -p typedoc-plugin-markdown@^4.9.0 \
+          typedoc \
+            --options typedoc.json \
+            --plugin typedoc-plugin-markdown
