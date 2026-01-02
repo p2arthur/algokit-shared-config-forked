@@ -25,7 +25,12 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
       run: |
-        # 2. Call the typedoc binary and plugins from the action folder
-        node "${{ github.action_path }}/node_modules/typedoc/bin/typedoc" \
-          --plugin "${{ github.action_path }}/node_modules/typedoc-plugin-markdown" \
-          --options "./typedoc.json"
+        # Add the SHARED binary folder to the PATH temporarily
+        export PATH="${{ github.action_path }}/node_modules/.bin:$PATH"
+
+        # Execute typedoc. 
+        # - It runs in CWD (Workspace), so it finds tsconfig.json and typedoc.json automatically.
+        # - We explicitly point to the plugin in the shared folder so it can be found.
+        typedoc \
+          --options typedoc.json \
+          --plugin "${{ github.action_path }}/node_modules/typedoc-plugin-markdown"
