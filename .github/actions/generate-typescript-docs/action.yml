@@ -20,7 +20,13 @@ runs:
       shell: bash
       run: node "${{ github.action_path }}/generate-typedoc-config.js"
 
-    - name: Build doc (Run typedoc)
+    - name: Generate Docs
+      working-directory: ${{ github.workspace }}
       shell: bash
-      working-directory: ${{ github.action_path }}
-      run: npm run generate:code-docs
+      run: |
+        # We execute the binary located in the SHARED action folder.
+        # But we run it HERE, in the workspace root.
+
+        "${{ github.action_path }}/node_modules/.bin/typedoc" \
+          --options "typedoc.json" \
+          --plugin "${{ github.action_path }}/node_modules/typedoc-plugin-markdown"

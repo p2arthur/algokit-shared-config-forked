@@ -1,0 +1,8 @@
+{
+  "name": "@algorandfoundation/algokit-shared-config",
+  "version": "1.0.0",
+  "files": ["tsconfig.base.json", "typedoc.base.json"],
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
