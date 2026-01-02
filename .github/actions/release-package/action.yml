@@ -45,28 +45,22 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
+        # We map the input to the ENV here
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
       run: |
         echo "🔍 DEBUG: Checking Token Availability..."
 
-        if [ -z "${GITHUB_TOKEN}" ]; then
+        if [ -z "$GITHUB_TOKEN" ]; then
           echo "❌ GITHUB_TOKEN is EMPTY inside the step env!"
+          exit 1
         else
+          # ✅ FIX: Use bash syntax on the ENV variable, not the interpolation
           echo "✅ GITHUB_TOKEN is SET (Length: ${#GITHUB_TOKEN})"
         fi
 
-        if [ -z "${{ inputs.BOT_TOKEN }}" ]; then
-           echo "❌ input.BOT_TOKEN is EMPTY passed from parent!"
-        else
-           echo "✅ input.BOT_TOKEN is SET (Length: ${#{{ inputs.BOT_TOKEN }}})"
-        fi
-
         echo "🚀 Running Semantic Release via npx..."
 
-        echo "🚀 Running Semantic Release via npx..."
-
-        # Reminder: -p must act on EACH plugin individually
         npx --yes \
           -p semantic-release \
           -p "@semantic-release/commit-analyzer" \
