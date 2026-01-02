@@ -24,4 +24,4 @@ runs:
     - name: Build doc (Run typedoc)
       shell: bash
       working-directory: ${{ github.action_path }}
-      run: npm run generate:code-docs
+      run: npm run generate:code-docs -- --tsconfig "${{ github.workspace }}/tsconfig.json"
