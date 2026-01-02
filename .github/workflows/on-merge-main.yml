@@ -2,6 +2,11 @@ name: On Merge to Main
 
 on:
   workflow_call:
+    inputs:
+      BOT_TOKEN:
+        description: The Bot Token for committing changes back to the repository.
+        required: true
+        type: string
     secrets:
       NPM_TOKEN:
         description: Custom NPM auth token for private package access.
@@ -59,6 +64,7 @@ jobs:
     name: Release Package
     needs: [ci, build, build-check-publish-docs]
     uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ref/consistency-ref-implementation
+
     secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      BOT_TOKEN: ${{ inputs.BOT_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
