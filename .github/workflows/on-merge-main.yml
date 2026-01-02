@@ -19,19 +19,17 @@ jobs:
     name: 🕵️ Debug Secret Ingress
     runs-on: ubuntu-latest
     steps:
-      - name: Check Received Secrets
+      - name: Check Received Token
         env:
-          # Map the secret to an env var to check it
-          BOT_TOKEN_CHECK: ${{ secrets.BOT_TOKEN }}
+          # Map input to env to check it safely
+          BOT_TOKEN_CHECK: ${{ inputs.BOT_TOKEN }}
         run: |
-          echo "🔍 Checking if Shared Workflow received the BOT_TOKEN..."
-
+          echo "🔍 Checking if Shared Workflow received the BOT_TOKEN input..."
           if [ -z "$BOT_TOKEN_CHECK" ]; then
-            echo "❌ CRITICAL: 'secrets.BOT_TOKEN' is EMPTY in this workflow!"
-            echo "   This means the Caller Workflow did not pass it correctly."
+            echo "❌ CRITICAL: 'inputs.BOT_TOKEN' is EMPTY!"
             exit 1
           else
-            echo "✅ SUCCESS: 'secrets.BOT_TOKEN' is present (Length: ${#BOT_TOKEN_CHECK})"
+            echo "✅ SUCCESS: 'inputs.BOT_TOKEN' is present (Length: ${#BOT_TOKEN_CHECK})"
           fi
   ci:
     name: Fake CI Check
