@@ -2,11 +2,6 @@ name: On Merge to Main
 
 on:
   workflow_call:
-    inputs:
-      BOT_TOKEN:
-        description: The Bot Token for committing changes back to the repository.
-        required: true
-        type: string
     secrets:
       NPM_TOKEN:
         description: Custom NPM auth token for private package access.
@@ -14,23 +9,15 @@ on:
       GH_TOKEN:
         description: GitHub token required for checkout and GitHub package access.
         required: true
+      # 👇 Change: We request credentials, not a token
+      BOT_ID:
+        description: GitHub App ID for release authentication.
+        required: true
+      BOT_SK:
+        description: GitHub App Private Key for release authentication.
+        required: true
+
 jobs:
-  debug_secrets_ingress:
-    name: 🕵️ Debug Secret Ingress
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Received Token
-        env:
-          # Map input to env to check it safely
-          BOT_TOKEN_CHECK: ${{ inputs.BOT_TOKEN }}
-        run: |
-          echo "🔍 Checking if Shared Workflow received the BOT_TOKEN input..."
-          if [ -z "$BOT_TOKEN_CHECK" ]; then
-            echo "❌ CRITICAL: 'inputs.BOT_TOKEN' is EMPTY!"
-            exit 1
-          else
-            echo "✅ SUCCESS: 'inputs.BOT_TOKEN' is present (Length: ${#BOT_TOKEN_CHECK})"
-          fi
   ci:
     name: Fake CI Check
     runs-on: ubuntu-latest
@@ -58,8 +45,30 @@ jobs:
   release:
     name: Release Package
     needs: [ci, build, build-check-publish-docs]
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ref/consistency-ref-implementation
+    runs-on: ubuntu-latest
+    # 👇 Critical: Release job needs write permissions to push tags
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
 
-    secrets:
-      BOT_TOKEN: ${{ secrets.GH_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 1. Generate the token inside this job
+      - name: Generate Bot Token
+        id: get_token
+        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-bot-token@ref/consistency-ref-implementation
+        with:
+          app_id: ${{ secrets.BOT_ID }}
+          private_key: ${{ secrets.BOT_SK }}
+
+      # 2. Use the token immediately (before it can be revoked)
+      - name: Run Semantic Release
+        uses: algorandfoundation/algokit-shared-config/.github/actions/release-package@ref/consistency-ref-implementation
+        with:
+          BOT_TOKEN: ${{ steps.get_token.outputs.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
