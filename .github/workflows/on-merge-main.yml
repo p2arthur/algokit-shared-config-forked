@@ -13,15 +13,19 @@ on:
         required: true
 
 jobs:
-  # The first three jobs are calling REUSABLE WORKFLOWS (uses: path/to/file.yml)
-  # This is fine because they don't have "steps"
   ci:
     name: CI Check
-    uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
-    with:
-      working-directory: "."
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    runs-on: ubuntu-latest # Added because this is now a standard job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Node CI Action
+        # Since this is a Composite Action, it must be a STEP
+        uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+        with:
+          working-directory: "."
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build:
     name: Build and Zip Package
