@@ -1,0 +1,26 @@
+name: "Generate Bot Token"
+description: "Generates a GitHub App installation token for the current repository."
+
+inputs:
+  app_id:
+    description: "The GitHub App ID"
+    required: true
+  private_key:
+    description: "The GitHub App Private Key"
+    required: true
+
+outputs:
+  token:
+    description: "The generated installation token"
+    value: ${{ steps.generate.outputs.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate Token
+      id: generate
+      uses: actions/create-github-app-token@v1
+      with:
+        app_id: ${{ inputs.app_id }}
+        private_key: ${{ inputs.private_key }}
+        owner: ${{ github.repository_owner }}

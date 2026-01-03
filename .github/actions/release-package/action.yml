@@ -1,0 +1,70 @@
+name: Release Package
+description: Makes a release of the package
+
+inputs:
+  BOT_TOKEN:
+    description: The Bot Token for committing changes back to the repository.
+    required: true
+  NPM_TOKEN:
+    description: Custom NPM auth token for private package access.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set Git user as GitHub actions
+      shell: bash
+      run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+
+    - name: Use node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Download built package artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: package
+        path: artifacts
+
+    - name: Unzip package
+      shell: bash
+      run: unzip artifacts/package.zip -d dist
+
+    - name: Install semantic-release
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm install
+
+    - name: Run Semantic Release
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        # We map the input to the ENV here
+        GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
+        NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
+      run: |
+        echo "🔍 DEBUG: Checking Token Availability..."
+
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "❌ GITHUB_TOKEN is EMPTY inside the step env!"
+          exit 1
+        else
+          # ✅ FIX: Use bash syntax on the ENV variable, not the interpolation
+          echo "✅ GITHUB_TOKEN is SET (Length: ${#GITHUB_TOKEN})"
+        fi
+
+        echo "🚀 Running Semantic Release via npx..."
+
+        npx --yes \
+          -p semantic-release \
+          -p "@semantic-release/commit-analyzer" \
+          -p "@semantic-release/release-notes-generator" \
+          -p "@semantic-release/github" \
+          -p "@semantic-release/npm" \
+          semantic-release

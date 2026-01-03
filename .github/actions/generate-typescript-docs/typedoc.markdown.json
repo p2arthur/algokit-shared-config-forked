@@ -8,7 +8,7 @@
   "cleanOutputDir": true,
   "readme": "docs/guides/README.md",
   "gitRevision": "main",
-  "tsconfig": "tsconfig.build.json",
+  "tsconfig": "tsconfig.json",
   "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
   "excludeReferences": true,
   "includeHierarchySummary": true

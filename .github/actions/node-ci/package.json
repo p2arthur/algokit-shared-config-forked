@@ -1,0 +1,22 @@
+{
+  "name": "@algorandfoundation/algokit-shared-node-ci",
+  "version": "1.0.0",
+  "description": "Standardized dependencies for Node.js Quality Checks",
+  "private": true,
+  "engines": {
+    "node": ">=20.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "author": "Algorand Foundation",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "vitest": "^3.0.0",
+    "@vitest/coverage-v8": "^3.0.0"
+  }
+}

@@ -12,13 +12,26 @@ runs:
       with:
         node-version: 22.x
     - name: Npm install
-      run: npm ci
+      working-directory: ${{ github.action_path }}
+      run: npm install
       shell: bash
 
     - name: Generate Dynamic TypeDoc Config
       shell: bash
       run: node "${{ github.action_path }}/generate-typedoc-config.js"
 
-    - name: Build Docs (HTML + Markdown)
+    - name: Generate Docs
+      working-directory: ${{ github.workspace }}
       shell: bash
-      run: npm run generate:code-docs
+      run: |
+        echo "🚀 Installing tools on-the-fly and generating docs..."
+
+        # npx installs these packages into a temporary cache.
+        # It runs inside the workspace, so it finds your 'typedoc.json' and 'tsconfig.json' automatically.
+        npx --yes \
+          -p typescript \
+          -p typedoc@^0.28.15 \
+          -p typedoc-plugin-markdown@^4.9.0 \
+          typedoc \
+            --options typedoc.json \
+            --plugin typedoc-plugin-markdown

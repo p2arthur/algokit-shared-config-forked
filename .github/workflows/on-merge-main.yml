@@ -1,0 +1,74 @@
+name: On Merge to Main
+
+on:
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
+      GH_TOKEN:
+        required: true
+      BOT_ID:
+        required: true
+      BOT_SK:
+        required: true
+
+jobs:
+  ci:
+    name: CI Check
+    runs-on: ubuntu-latest # Added because this is now a standard job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Node CI Action
+        # Since this is a Composite Action, it must be a STEP
+        uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+        with:
+          working-directory: "."
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build:
+    name: Build and Zip Package
+    needs: ci
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ref/consistency-ref-implementation
+    with:
+      node-version: 20.x
+      build-path: dist
+      artifact-name: package
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  build-check-publish-docs:
+    needs: ci
+    name: Build, Check and Publish Docs
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ref/consistency-ref-implementation
+
+  # The Release job is a STANDARD JOB (uses "steps")
+  release:
+    name: Release Package
+    needs: [ci, build, build-check-publish-docs]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Bot Token
+        id: get_token
+        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-bot-token@ref/consistency-ref-implementation
+        with:
+          app_id: ${{ secrets.BOT_ID }}
+          private_key: ${{ secrets.BOT_SK }}
+
+      - name: Run Semantic Release
+        uses: algorandfoundation/algokit-shared-config/.github/actions/release-package@ref/consistency-ref-implementation
+        with:
+          BOT_TOKEN: ${{ steps.get_token.outputs.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

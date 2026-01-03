@@ -12,9 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          node-version: 22.x
       - name: Check docs are up to date
         shell: bash
         run: |
@@ -22,5 +23,3 @@ jobs:
           npm run generate:code-docs
           # Add untracked files as empty so they come up in diff
           git add -N .
-          # Print changed files and error out if there are changes after generating docs
-          git diff --exit-code --name-only

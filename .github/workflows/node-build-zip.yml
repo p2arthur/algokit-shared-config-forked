@@ -1,10 +1,12 @@
+name: Generic Node.js Build and Zip
+
 on:
   workflow_call:
     inputs:
       node-version:
         required: false
         type: string
-        default: 18.x
+        default: 20.x
       working-directory:
         required: false
         type: string
@@ -12,19 +14,21 @@ on:
       build-path:
         required: false
         type: string
-        default: build
+        default: dist
       artifact-name:
         required: false
         type: string
-        default: node-app
+        default: node-artifact
       static-site:
         required: false
         type: boolean
         default: false
+        description: Set to true for static sites to enable build-time environment variable substitution.
       static-site-env-prefix:
         required: false
         type: string
         default: VITE
+        description: Environment variable prefix.
       pre-run-script:
         required: false
         type: string
@@ -32,70 +36,51 @@ on:
         required: false
         type: string
         default: .env.sample
+        description: Path to the .env file containing environment variable keys.
     secrets:
-      npm-auth-token:
-        description: NPM auth token (optional, GITHUB_TOKEN is used by default)
-        required: false
-    outputs:
-      artifact-name:
-        description: Name of the artifact created by this workflow
-        value: ${{ inputs.artifact-name }}
+      NPM_TOKEN:
+        description: Custom NPM auth token for private package access.
+        required: true
+      GH_TOKEN:
+        description: The GH_TOKEN required for checkout and GitHub package access.
+        required: true
 
 jobs:
   build-zip:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ inputs.working-directory }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
-      # setup node + private repo access
-      - name: Use Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v6
+      - name: 1. Setup Environment and Auth
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-node-auth@ref/consistency-ref-implementation
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@makerxstudio"
-          cache: "npm"
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+          working-directory: ${{ inputs.working-directory }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Pre-run
-        if: ${{ inputs.pre-run-script }}
-        run: ${{ inputs.pre-run-script }}
+      - name: 2. Prepare Static Site Config Transformation
+        if: ${{ inputs.static-site }}
+        shell: bash
+        run: |
+          sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
+        working-directory: ${{ inputs.working-directory }}
 
-      # prepare static sites for config transformation upon later deployment
-      - if: ${{ inputs.static-site }}
-        run: sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
-
-      # run npm ci preventing script access to npm auth token
-      - run: npm ci --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      # allow scripts to run without npm auth token
-      - run: npm rebuild && npm run prepare --if-present
-
-      - name: Prepare
-        run: npm run prepare --if-present
-
-      - name: Build
-        run: npm run build
-        # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-
-      - name: Zip build folder
-        run: pushd ${{ inputs.build-path }}; zip -q -r ../${{ inputs.artifact-name }}.zip *
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
+      - name: 3. Run Build Scripts
+        uses: algorandfoundation/algokit-shared-config/.github/actions/run-build@ref/consistency-ref-implementation
         with:
-          name: ${{ inputs.artifact-name }}
-          path: ${{ inputs.working-directory }}/${{ inputs.artifact-name }}.zip
-          if-no-files-found: error
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          pre-run-script: ${{ inputs.pre-run-script }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: 4. Archive and Upload Artifact
+        uses: algorandfoundation/algokit-shared-config/.github/actions/archive-artifact@ref/consistency-ref-implementation
+        with:
+          build-path: ${{ inputs.build-path }}
+          artifact-name: ${{ inputs.artifact-name }}
+          working-directory: ${{ inputs.working-directory }}

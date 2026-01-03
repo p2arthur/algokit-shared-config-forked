@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # 1. Keep your Release Tools updated (npm)
+  - package-ecosystem: "npm"
+    directories:
+      - "/actions/release-package" # Where your release package.json lives
+      - "/actions/generate-typescript-docs" # Where your docs package.json lives
+    schedule:
+      interval: "weekly"
+    groups:
+      release-tools:
+        patterns:
+          - "semantic-release"
+          - "@semantic-release/*"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  - package-ecosystem: "pip" # Handles pip, pipenv, and poetry
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-tools:
+        patterns: ["python-semantic-release", "pytest", "black", "ruff"]
+
+  # 2. Keep your GitHub Actions updated
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*" # Groups all action updates into one PR to reduce noise
+    labels:
+      - "dependencies"
+      - "github-actions"

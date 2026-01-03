@@ -1,0 +1,19 @@
+{
+  "name": "@algorandfoundation/algokit-shared-docs-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internal tooling for generating Algokit TypeScript documentation",
+  "scripts": {
+    "generate:code-docs": "typedoc"
+  },
+  "author": "Algorand Foundation",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0"
+  },
+  "dependencies": {
+    "typescript": "^5.4.3",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0"
+  }
+}

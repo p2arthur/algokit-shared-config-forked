@@ -1,0 +1,46 @@
+name: "Node CI"
+description: "Standardized Node.js CI: Install, Lint, Typecheck, Test, and Build"
+
+inputs:
+  working-directory:
+    description: "The directory where npm commands should run"
+    required: false
+    default: "."
+  NPM_TOKEN:
+    description: "NPM token for private registry access"
+    required: false
+  node-version:
+    description: "Node version to use"
+    required: false
+    default: "20"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "npm"
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: Install CI Tooling
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm install
+
+    - name: Install Project Dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN || github.token }}
+
+    - name: Quality Checks
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        npm run lint --if-present
+        npm run typecheck --if-present
+        npm test --if-present
+        npm run build --if-present
