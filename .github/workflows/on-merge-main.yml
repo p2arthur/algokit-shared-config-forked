@@ -4,23 +4,19 @@ on:
   workflow_call:
     secrets:
       NPM_TOKEN:
-        description: Custom NPM auth token for private package access.
         required: true
       GH_TOKEN:
-        description: GitHub token required for checkout and GitHub package access.
         required: true
-      # 👇 Change: We request credentials, not a token
       BOT_ID:
-        description: GitHub App ID for release authentication.
         required: true
       BOT_SK:
-        description: GitHub App Private Key for release authentication.
         required: true
 
 jobs:
+  # The first three jobs are calling REUSABLE WORKFLOWS (uses: path/to/file.yml)
+  # This is fine because they don't have "steps"
   ci:
     name: Fake CI Check
-    runs-on: ubuntu-latest
     uses: algorandfoundation/algokit-shared-config/.github/workflows/node-ci.yml@ref/consistency-ref-implementation
     with:
       working-directory: "."
@@ -44,11 +40,11 @@ jobs:
     name: Build, Check and Publish Docs
     uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ref/consistency-ref-implementation
 
+  # The Release job is a STANDARD JOB (uses "steps")
   release:
     name: Release Package
     needs: [ci, build, build-check-publish-docs]
     runs-on: ubuntu-latest
-    # 👇 Critical: Release job needs write permissions to push tags
     permissions:
       contents: write
       issues: write
@@ -60,7 +56,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. Generate the token inside this job
       - name: Generate Bot Token
         id: get_token
         uses: algorandfoundation/algokit-shared-config/.github/actions/generate-bot-token@ref/consistency-ref-implementation
@@ -68,7 +63,6 @@ jobs:
           app_id: ${{ secrets.BOT_ID }}
           private_key: ${{ secrets.BOT_SK }}
 
-      # 2. Use the token immediately (before it can be revoked)
       - name: Run Semantic Release
         uses: algorandfoundation/algokit-shared-config/.github/actions/release-package@ref/consistency-ref-implementation
         with:
