@@ -21,9 +21,11 @@ jobs:
   ci:
     name: Fake CI Check
     runs-on: ubuntu-latest
-    steps:
-      - name: Skip CI for testing downstream jobs
-        run: echo "Skipping actual CI checks for now to test build and release sequence."
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-ci.yml@ref/consistency-ref-implementation
+    with:
+      working-directory: "."
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build:
     name: Build and Zip Package
