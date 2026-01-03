@@ -17,7 +17,7 @@ jobs:
   # This is fine because they don't have "steps"
   ci:
     name: Fake CI Check
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-ci.yml@ref/consistency-ref-implementation
+    uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
     with:
       working-directory: "."
     secrets:
