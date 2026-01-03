@@ -1,0 +1,21 @@
+name: On Pull Request
+
+on:
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
+jobs:
+  ci:
+    name: CI Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Node CI Action
+        # Since this is a Composite Action, it must be a STEP
+        uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+        with:
+          working-directory: "."
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
