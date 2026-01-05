@@ -56,5 +56,6 @@ jobs:
       - name: Run Semantic Release
         uses: p2arthur/algokit-shared-config-forked/.github/actions/release-package@main
         with:
+          project_type: ${{ inputs.project_type }}
           BOT_TOKEN: ${{ steps.get_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

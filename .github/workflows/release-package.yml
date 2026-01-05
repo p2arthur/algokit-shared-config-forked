@@ -2,6 +2,11 @@ name: Release Package
 
 on:
   workflow_call:
+    inputs:
+      project_type:
+        description: The type of project being released (e.g., 'typescript' or 'python').
+        required: true
+        type: string
     secrets:
       BOT_TOKEN:
         description: The Bot Token for committing changes back to the repository.
@@ -28,5 +33,6 @@ jobs:
       - name: Release Package
         uses: p2arthur/algokit-shared-config-forked/.github/actions/release-package@main
         with:
+          project_type: ${{ inputs.project_type }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
