@@ -10,19 +10,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install Poetry
         run: pipx install poetry
+        shell: bash
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "poetry"
+
       - name: Install dependencies
         run: poetry install
+        shell: bash
+
       - name: Run Tests
         run: poetry run pytest
+        shell: bash
 
-  # ADD THIS JOB
   build:
     name: Build Python Package
     needs: ci_check
@@ -33,12 +39,24 @@ jobs:
 
       - name: Install Poetry
         run: pipx install poetry
+        shell: bash
 
       - name: Build Package
-        run: poetry build # This creates a 'dist' folder by default
+        run: poetry build
+        shell: bash
 
       - name: Archive and Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: package # MUST match the name semantic release is looking for
+          name: package
           path: dist/
+
+  # --- NEW: Docs Generation ---
+  build-docs:
+    name: Build and Check Docs
+    needs: ci_check
+    # Calling your shared documentation workflow
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
+    with:
+      project_type: python
+    secrets: inherit
