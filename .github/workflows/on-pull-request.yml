@@ -15,7 +15,7 @@ jobs:
 
       - name: Run Node CI Action
         # Since this is a Composite Action, it must be a STEP
-        uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+        uses: p2arthur/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
         with:
           working-directory: "."
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

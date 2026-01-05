@@ -1,0 +1,40 @@
+name: "Build Python Documentation"
+description: "Checks out code, sets up Python/Poetry, and builds Sphinx docs using Poe tasks."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Required if your docs depend on git tags/history
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: "poetry"
+
+    - name: Install Poetry
+      shell: bash
+      run: pipx install poetry
+
+    - name: Install dependencies
+      shell: bash
+      run: poetry install --with dev --no-interaction
+
+    - name: Build Docs
+      shell: bash
+      run: |
+        echo "🚀 Building documentation using Sphinx and Poe..."
+        # We use the 'docs-build' task defined in your pyproject.toml
+        poetry run poe docs-build
+      working-directory: ${{ github.workspace }}
+
+    - name: Check for build artifacts
+      shell: bash
+      run: |
+        if [ ! -d "docs/_build" ]; then
+          echo "❌ Documentation build failed to produce docs/_build directory"
+          exit 1
+        fi

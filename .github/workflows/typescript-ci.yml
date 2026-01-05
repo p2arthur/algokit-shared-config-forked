@@ -1,0 +1,35 @@
+name: CI TypeScript
+on:
+  workflow_call:
+
+jobs:
+  node-ci:
+  name: CI Check
+  runs-on: ubuntu-latest # Added because this is now a standard job
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Run Node CI Action
+      # Since this is a Composite Action, it must be a STEP
+      uses: p2arthur/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+      with:
+        working-directory: "."
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build:
+    name: Build and Zip Package
+    needs: node-ci
+    uses: p2arthur/algokit-shared-config/.github/workflows/node-build-zip.yml@ref/consistency-ref-implementation
+    with:
+      node-version: 20.x
+      build-path: dist
+      artifact-name: package
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  build-check-publish-docs:
+    needs: node-ci
+    name: Build, Check and Publish Docs
+    uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ref/consistency-ref-implementation

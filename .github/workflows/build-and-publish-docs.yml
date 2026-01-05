@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  build-and-check-docs:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 1
 
       - name: Build Typedoc Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ref/consistency-ref-implementation
+        uses: p2arthur/algokit-shared-config/.github/actions/generate-typescript-docs@ref/consistency-ref-implementation
 
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
@@ -23,7 +23,7 @@ jobs:
           retention-days: 1
 
   publish-docs:
-    needs: build-and-check-docs
+    needs: build-docs
     runs-on: ubuntu-latest
     steps:
       - name: Download Documentation Artifact
@@ -33,6 +33,6 @@ jobs:
           path: docs/downloaded
 
       - name: Deploy Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ref/consistency-ref-implementation
+        uses: p2arthur/algokit-shared-config/.github/actions/publish-docs@ref/consistency-ref-implementation
         with:
           artifact_path: docs/downloaded
