@@ -4,18 +4,17 @@ on:
 
 jobs:
   node-ci:
-  name: CI Check
-  runs-on: ubuntu-latest # Added because this is now a standard job
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    name: CI Check # Indented 2 spaces
+    runs-on: ubuntu-latest # Indented 2 spaces
+    steps: # Indented 2 spaces
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Run Node CI Action
-      # Since this is a Composite Action, it must be a STEP
-      uses: p2arthur/algokit-shared-config/.github/actions/node-ci@main
-      with:
-        working-directory: "."
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Run Node CI Action
+        uses: p2arthur/algokit-shared-config/.github/actions/node-ci@main
+        with:
+          working-directory: "."
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build:
     name: Build and Zip Package
@@ -33,3 +32,4 @@ jobs:
     needs: node-ci
     name: Build, Check and Publish Docs
     uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@main
+    secrets: inherit # Added to ensure docs build has access to tokens if needed
