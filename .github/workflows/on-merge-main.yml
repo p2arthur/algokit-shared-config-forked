@@ -5,7 +5,7 @@ on:
     inputs:
       project_type:
         required: true
-        type: string # 'typescript' or 'python'
+        type: string
     secrets:
       NPM_TOKEN:
         required: false
@@ -17,23 +17,26 @@ on:
         required: true
 
 jobs:
-  # --- Dispatch to TypeScript Workflow ---
   typescript-ci:
     if: ${{ inputs.project_type == 'typescript' }}
-    uses: ./.github/workflows/ci-typescript.yml
+    # USE ABSOLUTE PATHS FOR NESTED CALLS
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/ci-typescript.yml@main
     secrets: inherit
 
-  # --- Dispatch to Python Workflow ---
   python-ci:
     if: ${{ inputs.project_type == 'python' }}
-    uses: ./.github/workflows/ci-python.yml
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/ci-python.yml@main
     secrets: inherit
 
-  # --- Common Release Job ---
   release:
     name: Release Package
     needs: [typescript-ci, python-ci]
-    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    # This logic ensures release runs if the active CI job succeeded OR if the other was skipped
+    if: |
+      always() && 
+      (needs.typescript-ci.result == 'success' || needs.typescript-ci.result == 'skipped') &&
+      (needs.python-ci.result == 'success' || needs.python-ci.result == 'skipped') &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     permissions:
       contents: write

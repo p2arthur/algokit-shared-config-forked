@@ -1,35 +1,30 @@
 name: CI Python
+
 on:
-  workflow_call:
+  workflow_call: # This makes it reusable
 
 jobs:
-  node-ci:
-  name: CI Check
-  runs-on: ubuntu-latest # Added because this is now a standard job
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+  ci_check: # Line 6: Mapping key
+    name: CI Check # Line 7
+    runs-on: ubuntu-latest # Line 8
+    steps: # Line 10: Start of the sequence
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Run Node CI Action
-      # Since this is a Composite Action, it must be a STEP
-      uses: p2arthur/algokit-shared-config/.github/actions/node-ci@main
-      with:
-        working-directory: "."
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Install Poetry
+        run: pipx install poetry
+        shell: bash
 
-  build:
-    name: Build and Zip Package
-    needs: node-ci
-    uses: p2arthur/algokit-shared-config/.github/workflows/node-build-zip.yml@main
-    with:
-      node-version: 20.x
-      build-path: dist
-      artifact-name: package
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "poetry"
 
-  build-check-publish-docs:
-    needs: node-ci
-    name: Build, Check and Publish Docs
-    uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@main
+      - name: Install dependencies
+        run: poetry install
+        shell: bash
+
+      - name: Run Tests
+        run: poetry run pytest
+        shell: bash
