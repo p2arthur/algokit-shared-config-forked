@@ -19,7 +19,6 @@ on:
 jobs:
   typescript-ci:
     if: ${{ inputs.project_type == 'typescript' }}
-    # USE ABSOLUTE PATHS FOR NESTED CALLS
     uses: p2arthur/algokit-shared-config-forked/.github/workflows/ci-typescript.yml@main
     secrets: inherit
 
@@ -31,7 +30,6 @@ jobs:
   release:
     name: Release Package
     needs: [typescript-ci, python-ci]
-    # This logic ensures release runs if the active CI job succeeded OR if the other was skipped
     if: |
       always() && 
       (needs.typescript-ci.result == 'success' || needs.typescript-ci.result == 'skipped') &&
