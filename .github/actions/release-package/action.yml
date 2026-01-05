@@ -1,63 +1,73 @@
 name: Release Package
-description: Logic to release either Node (NPM) or Python (Poetry) packages.
+description: Centralized release logic for TS (NPM) and Python (Poetry).
 
 inputs:
   project_type:
-    description: "Either 'typescript' or 'python'"
+    description: "typescript or python"
     required: true
   BOT_TOKEN:
-    description: "GitHub Token"
     required: true
   NPM_TOKEN:
-    description: "NPM Token (Required for TS)"
     required: false
   PYPI_TOKEN:
-    description: "PyPI Token (Required for Python)"
     required: false
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Setup Node (For Semantic Release)
+    - name: Setup Node
       uses: actions/setup-node@v4
       with:
         node-version: 20
 
-    - name: Run Semantic Release
+    # 1. Install all release tools INTO the action directory
+    - name: Install Release Tools
+      shell: bash
       working-directory: ${{ github.action_path }}
+      run: |
+        npm install semantic-release \
+          @semantic-release/commit-analyzer \
+          @semantic-release/release-notes-generator \
+          @semantic-release/github \
+          @semantic-release/npm
+
+    - name: Run Semantic Release
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
+        # This is the magic fix for the "Module Not Found" error
+        NODE_PATH: ${{ github.action_path }}/node_modules
       run: |
-        # Determine which config to use
+        # Select config based on project type
         if [ "${{ inputs.project_type }}" == "python" ]; then
-          CONFIG="--extends ./.releaserc.python.json"
+          # Use the relative path to the shared config inside your repo
+          CONFIG="--extends ${{ github.action_path }}/.releaserc.python.json"
         else
-          # Assumes the standard .releaserc.json exists for TS
-          CONFIG="" 
+          # Standard TS config (assumed to be in the project root or another file)
+          CONFIG=""
         fi
 
-        npx semantic-release $CONFIG
+        # Run the local binary we just installed
+        ${{ github.action_path }}/node_modules/.bin/semantic-release $CONFIG
 
-    # --- POST-RELEASE PUBLISH (PYTHON) ---
+    # 2. Python-specific post-release (Publishing)
     - name: Poetry Publish
       if: ${{ inputs.project_type == 'python' }}
       shell: bash
       env:
         POETRY_PYPI_TOKEN_PYPI: ${{ inputs.PYPI_TOKEN }}
       run: |
-        # Get the new version created by semantic-release (from git tags)
-        NEW_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
-        poetry version $NEW_VERSION
+        pipx install poetry
+        # Get the new tag created by semantic-release
+        NEW_TAG=$(git describe --tags --abbrev=0 | sed 's/v//')
+        poetry version $NEW_TAG
         poetry build
         if [ -n "$POETRY_PYPI_TOKEN_PYPI" ]; then
           poetry publish
-        else
-          echo "No PYPI_TOKEN provided, skipping publish."
         fi
