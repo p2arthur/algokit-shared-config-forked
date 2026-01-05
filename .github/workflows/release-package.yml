@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Release Package
-        uses: p2arthur/algokit-shared-config/.github/actions/release-package@ref/consistency-ref-implementation
+        uses: p2arthur/algokit-shared-config/.github/actions/release-package@main
         with:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

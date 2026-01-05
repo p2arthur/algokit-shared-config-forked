@@ -12,7 +12,7 @@ jobs:
 
     - name: Run Node CI Action
       # Since this is a Composite Action, it must be a STEP
-      uses: p2arthur/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
+      uses: p2arthur/algokit-shared-config/.github/actions/node-ci@main
       with:
         working-directory: "."
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -20,7 +20,7 @@ jobs:
   build:
     name: Build and Zip Package
     needs: node-ci
-    uses: p2arthur/algokit-shared-config/.github/workflows/node-build-zip.yml@ref/consistency-ref-implementation
+    uses: p2arthur/algokit-shared-config/.github/workflows/node-build-zip.yml@main
     with:
       node-version: 20.x
       build-path: dist
@@ -32,4 +32,4 @@ jobs:
   build-check-publish-docs:
     needs: node-ci
     name: Build, Check and Publish Docs
-    uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ref/consistency-ref-implementation
+    uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@main
