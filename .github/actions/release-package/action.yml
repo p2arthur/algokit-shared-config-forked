@@ -1,13 +1,19 @@
 name: Release Package
-description: Makes a release of the package
+description: Logic to release either Node (NPM) or Python (Poetry) packages.
 
 inputs:
+  project_type:
+    description: "Either 'typescript' or 'python'"
+    required: true
   BOT_TOKEN:
-    description: The Bot Token for committing changes back to the repository.
+    description: "GitHub Token"
     required: true
   NPM_TOKEN:
-    description: Custom NPM auth token for private package access.
-    required: true
+    description: "NPM Token (Required for TS)"
+    required: false
+  PYPI_TOKEN:
+    description: "PyPI Token (Required for Python)"
+    required: false
 
 runs:
   using: "composite"
@@ -17,50 +23,40 @@ runs:
       with:
         fetch-depth: 0
 
-    - name: Set Git user as GitHub actions
-      shell: bash
-      run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
-
-    - name: Use node 20
+    - name: Setup Node (For Semantic Release)
       uses: actions/setup-node@v4
       with:
         node-version: 20
 
-    - name: Download built package artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: package
-        path: artifacts
-
-    - name: Install semantic-release
-      shell: bash
-      working-directory: ${{ github.action_path }}
-      run: npm install
-
     - name: Run Semantic Release
       shell: bash
-      working-directory: ${{ github.workspace }}
       env:
-        # We map the input to the ENV here
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
       run: |
-        echo "🔍 DEBUG: Checking Token Availability..."
-
-        if [ -z "$GITHUB_TOKEN" ]; then
-          echo "❌ GITHUB_TOKEN is EMPTY inside the step env!"
-          exit 1
+        # Determine which config to use
+        if [ "${{ inputs.project_type }}" == "python" ]; then
+          CONFIG="--extends ./.releaserc.python.json"
         else
-          # ✅ FIX: Use bash syntax on the ENV variable, not the interpolation
-          echo "✅ GITHUB_TOKEN is SET (Length: ${#GITHUB_TOKEN})"
+          # Assumes the standard .releaserc.json exists for TS
+          CONFIG="" 
         fi
 
-        echo "🚀 Running Semantic Release via npx..."
+        npx semantic-release $CONFIG
 
-        npx --yes \
-          -p semantic-release \
-          -p "@semantic-release/commit-analyzer" \
-          -p "@semantic-release/release-notes-generator" \
-          -p "@semantic-release/github" \
-          -p "@semantic-release/npm" \
-          semantic-release
+    # --- POST-RELEASE PUBLISH (PYTHON) ---
+    - name: Poetry Publish
+      if: ${{ inputs.project_type == 'python' }}
+      shell: bash
+      env:
+        POETRY_PYPI_TOKEN_PYPI: ${{ inputs.PYPI_TOKEN }}
+      run: |
+        # Get the new version created by semantic-release (from git tags)
+        NEW_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+        poetry version $NEW_VERSION
+        poetry build
+        if [ -n "$POETRY_PYPI_TOKEN_PYPI" ]; then
+          poetry publish
+        else
+          echo "No PYPI_TOKEN provided, skipping publish."
+        fi
