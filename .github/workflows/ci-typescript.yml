@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest # Indented 2 spaces
     steps: # Indented 2 spaces
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Node CI Action
         uses: p2arthur/algokit-shared-config-forked/.github/actions/node-ci@main

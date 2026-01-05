@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest # Line 8
     steps: # Line 10: Start of the sequence
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Poetry
         run: pipx install poetry
         shell: bash
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "poetry"
