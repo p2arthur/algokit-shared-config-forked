@@ -50,13 +50,13 @@ jobs:
 
       - name: Generate Bot Token
         id: get_token
-        uses: p2arthur/algokit-shared-config/.github/actions/generate-bot-token@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-bot-token@main
         with:
           app_id: ${{ secrets.BOT_ID }}
           private_key: ${{ secrets.BOT_SK }}
 
       - name: Run Semantic Release
-        uses: p2arthur/algokit-shared-config/.github/actions/release-package@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/release-package@main
         with:
           BOT_TOKEN: ${{ steps.get_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

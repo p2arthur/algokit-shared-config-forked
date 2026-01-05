@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Node CI Action
-        uses: p2arthur/algokit-shared-config/.github/actions/node-ci@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/node-ci@main
         with:
           working-directory: "."
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -19,7 +19,7 @@ jobs:
   build:
     name: Build and Zip Package
     needs: node-ci
-    uses: p2arthur/algokit-shared-config/.github/workflows/node-build-zip.yml@main
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/node-build-zip.yml@main
     with:
       node-version: 20.x
       build-path: dist
@@ -31,5 +31,5 @@ jobs:
   build-check-publish-docs:
     needs: node-ci
     name: Build, Check and Publish Docs
-    uses: p2arthur/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@main
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
     secrets: inherit # Added to ensure docs build has access to tokens if needed

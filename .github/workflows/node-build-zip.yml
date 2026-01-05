@@ -57,7 +57,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: 1. Setup Environment and Auth
-        uses: p2arthur/algokit-shared-config/.github/actions/setup-node-auth@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/setup-node-auth@main
         with:
           node-version: ${{ inputs.node-version }}
           working-directory: ${{ inputs.working-directory }}
@@ -72,14 +72,14 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
       - name: 3. Run Build Scripts
-        uses: p2arthur/algokit-shared-config/.github/actions/run-build@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/run-build@main
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           pre-run-script: ${{ inputs.pre-run-script }}
           working-directory: ${{ inputs.working-directory }}
 
       - name: 4. Archive and Upload Artifact
-        uses: p2arthur/algokit-shared-config/.github/actions/archive-artifact@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/archive-artifact@main
         with:
           build-path: ${{ inputs.build-path }}
           artifact-name: ${{ inputs.artifact-name }}

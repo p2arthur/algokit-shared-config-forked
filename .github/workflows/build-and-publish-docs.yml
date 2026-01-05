@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 1
 
       - name: Build Typedoc Documentation
-        uses: p2arthur/algokit-shared-config/.github/actions/generate-typescript-docs@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-typescript-docs@main
 
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
@@ -33,6 +33,6 @@ jobs:
           path: docs/downloaded
 
       - name: Deploy Documentation
-        uses: p2arthur/algokit-shared-config/.github/actions/publish-docs@main
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/publish-docs@main
         with:
           artifact_path: docs/downloaded
