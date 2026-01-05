@@ -16,9 +16,9 @@ runs:
       run: npm install
       shell: bash
 
-    - name: Generate Dynamic TypeDoc Config
-      shell: bash
-      run: node "${{ github.action_path }}/generate-typedoc-config.js"
+    # - name: Generate Dynamic TypeDoc Config
+    #   shell: bash
+    #   run: node "${{ github.action_path }}/generate-typedoc-config.js"
 
     - name: Generate Docs
       working-directory: ${{ github.workspace }}
