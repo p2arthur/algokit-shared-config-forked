@@ -18,14 +18,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: 🗜️ Zip build folder
-      shell: bash
-      run: pushd ${{ inputs.build-path}}; zip -q -r ../${{ inputs.artifact-name }}.zip *; popd
-      working-directory: ${{ inputs.working-directory }}
+    # Remove the manual "Zip build folder" step entirely
 
-    - name: ⬆️ Upload Zipped Artifact
+    - name: ⬆️ Upload Folder Directly
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.working-directory }}/${{ inputs.artifact-name }}.zip
+        path: ${{ inputs.working-directory }}/${{ inputs.build-path }}
         if-no-files-found: error

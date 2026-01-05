@@ -32,10 +32,6 @@ runs:
         name: package
         path: artifacts
 
-    - name: Unzip package
-      shell: bash
-      run: unzip artifacts/package.zip -d dist
-
     - name: Install semantic-release
       shell: bash
       working-directory: ${{ github.action_path }}
