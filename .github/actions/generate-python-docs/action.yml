@@ -1,40 +1,43 @@
-name: "Build Python Documentation"
-description: "Checks out code, sets up Python/Poetry, and builds Sphinx docs using Poe tasks."
+name: "Build Python Docs"
+description: "Installs dependencies and builds Sphinx documentation."
+
+inputs:
+  working-directory:
+    description: "The directory containing pyproject.toml"
+    required: false
+    default: "."
+  docs-directory:
+    description: "The directory containing the Sphinx conf.py"
+    required: false
+    default: "docs"
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Required if your docs depend on git tags/history
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-        cache: "poetry"
 
     - name: Install Poetry
       shell: bash
       run: pipx install poetry
 
-    - name: Install dependencies
+    - name: Install Dependencies
       shell: bash
-      run: poetry install --with dev --no-interaction
-
-    - name: Build Docs
-      shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
-        echo "🚀 Building documentation using Sphinx and Poe..."
-        # We use the 'docs-build' task defined in your pyproject.toml
-        poetry run poe docs-build
-      working-directory: ${{ github.workspace }}
+        poetry install --with dev,docs  # Assumes you have a 'docs' group in pyproject.toml
 
-    - name: Check for build artifacts
+    - name: Build Sphinx Docs
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
-        if [ ! -d "docs/_build" ]; then
-          echo "❌ Documentation build failed to produce docs/_build directory"
-          exit 1
-        fi
+        # Adjust 'make html' if your build command differs
+        poetry run sphinx-build -b html ${{ inputs.docs-directory }} ${{ inputs.docs-directory }}/_build/html
+
+    - name: Upload Documentation Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-docs
+        path: ${{ inputs.working-directory }}/${{ inputs.docs-directory }}/_build/html

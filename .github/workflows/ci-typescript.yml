@@ -1,35 +1,62 @@
-name: CI TypeScript
+name: CI Python
+
 on:
   workflow_call:
 
 jobs:
-  node-ci:
-    name: CI Check # Indented 2 spaces
-    runs-on: ubuntu-latest # Indented 2 spaces
-    steps: # Indented 2 spaces
+  ci_check:
+    name: CI Check
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Node CI Action
-        uses: p2arthur/algokit-shared-config-forked/.github/actions/node-ci@main
+      - name: Install Poetry
+        run: pipx install poetry
+        shell: bash
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          working-directory: "."
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          python-version: "3.12"
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: poetry install
+        shell: bash
+
+      - name: Run Tests
+        run: poetry run pytest
+        shell: bash
 
   build:
-    name: Build and Zip Package
-    needs: node-ci
-    uses: p2arthur/algokit-shared-config-forked/.github/workflows/node-build-zip.yml@main
-    with:
-      node-version: 20.x
-      build-path: dist
-      artifact-name: package
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    name: Build Python Package
+    needs: ci_check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  build-check-publish-docs:
-    needs: node-ci
-    name: Build, Check and Publish Docs
+      - name: Install Poetry
+        run: pipx install poetry
+        shell: bash
+
+      - name: Build Package
+        run: poetry build
+        shell: bash
+
+      - name: Archive and Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: dist/
+
+  # --- NEW: Docs Generation ---
+  build-docs:
+    name: Build and Check Docs
+    needs: ci_check
+    # Calling your shared documentation workflow
     uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
-    secrets: inherit # Added to ensure docs build has access to tokens if needed
+    with:
+      project_type: python
+    secrets: inherit

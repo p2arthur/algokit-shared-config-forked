@@ -2,6 +2,11 @@ name: "Build, Check and Publish Docs"
 
 on:
   workflow_call:
+    inputs:
+      project_type:
+        description: "The type of project: 'typescript' or 'python'"
+        required: true
+        type: string
 
 jobs:
   build-docs:
@@ -12,14 +17,24 @@ jobs:
         with:
           fetch-depth: 1
 
+      # --- TypeScript Logic ---
       - name: Build Typedoc Documentation
+        if: ${{ inputs.project_type == 'typescript' }}
         uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-typescript-docs@main
 
+      # --- Python Logic ---
+      - name: Build Sphinx Documentation
+        if: ${{ inputs.project_type == 'python' }}
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-python-docs@main
+
+      # --- Unified Upload ---
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages-docs
-          path: docs/_html
+          # Note: Ensure your generate-python-docs action also outputs to a consistent path
+          # or use a ternary/conditional here if paths differ significantly.
+          path: ${{ inputs.project_type == 'python' && 'docs/_build/html' || 'docs/_html' }}
           retention-days: 1
 
   publish-docs:
