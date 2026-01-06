@@ -19,32 +19,23 @@ jobs:
           app_id: ${{ secrets.BOT_ID }}
           private_key: ${{ secrets.BOT_SK }}
 
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
 
       - name: Sync Branches
-        env:
-          GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          # 1. Update the 'release' branch using 'main' as the source
-          # We use the full git syntax here because 'gh repo sync' 
-          # is designed mostly for syncing forks to upstreams.
+          # Configure identity
+          git config user.email "179917785+engineering-ci[bot]@users.noreply.github.com"
+          git config user.name "engineering-ci[bot]"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Fetch all branches to ensure we see 'main' and 'release'
-          git fetch origin main release
-
-          # Switch to release and merge main
+          # 1. Update 'release' to match 'main'
           git checkout release
-          git merge origin/main --no-edit
+          git merge origin/main --ff-only || git merge origin/main --no-edit
           git push origin release
 
-          # Switch back to main and ensure it's in sync
+          # 2. Ensure 'main' has any changes from 'release' (like tags/metadata)
           git checkout main
           git merge origin/release --no-edit
           git push origin main
