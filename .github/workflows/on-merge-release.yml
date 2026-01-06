@@ -27,8 +27,8 @@ jobs:
       - name: Sync Branches
         run: |
           # Configure identity
-          git config user.email "179917785+engineering-ci[bot]@users.noreply.github.com"
-          git config user.name "engineering-ci[bot]"
+          git config user.email "2336580+algokit-p2-bot[bot]@users.noreply.github.com"
+          git config user.name "algokit-p2-bot[bot]"
 
           # 1. Update 'release' to match 'main'
           git checkout release
