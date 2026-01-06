@@ -1,7 +1,7 @@
 name: Prod Publish
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   prod_release:
