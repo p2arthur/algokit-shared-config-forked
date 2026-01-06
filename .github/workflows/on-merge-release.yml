@@ -29,11 +29,22 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          # 1. Sync release with main
-          # Using 'gh' handles the auth and identity for you
-          gh repo sync p2arthur/subscriber-ts-ref --branch release --source main
+          # 1. Update the 'release' branch using 'main' as the source
+          # We use the full git syntax here because 'gh repo sync' 
+          # is designed mostly for syncing forks to upstreams.
 
-          # 2. If you need to merge release back to main (for tags/metadata)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Fetch all branches to ensure we see 'main' and 'release'
+          git fetch origin main release
+
+          # Switch to release and merge main
+          git checkout release
+          git merge origin/main --no-edit
+          git push origin release
+
+          # Switch back to main and ensure it's in sync
           git checkout main
           git merge origin/release --no-edit
           git push origin main
