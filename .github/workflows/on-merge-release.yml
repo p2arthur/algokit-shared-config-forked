@@ -2,6 +2,11 @@ name: Prod Publish
 
 on:
   workflow_call:
+    secrets:
+      BOT_ID:
+        required: true
+      BOT_SK:
+        required: true
 
 jobs:
   prod_release:
