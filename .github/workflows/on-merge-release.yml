@@ -25,19 +25,15 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
 
-      - name: Sync and Push
+      - name: Sync Branches
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          # Automatically set identity based on the App's info
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 1. Sync release with main
+          # Using 'gh' handles the auth and identity for you
+          gh repo sync p2arthur/subscriber-ts-ref --branch release --source main
 
-          # Sync 'release' branch
-          git checkout release
-          git pull origin release --rebase # Ensure we have latest
-          git merge origin/main --no-edit
-          git push origin release
-
-          # Sync 'main' branch
+          # 2. If you need to merge release back to main (for tags/metadata)
           git checkout main
           git merge origin/release --no-edit
           git push origin main
