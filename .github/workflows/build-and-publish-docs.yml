@@ -51,3 +51,9 @@ jobs:
         uses: p2arthur/algokit-shared-config-forked/.github/actions/publish-docs@main
         with:
           artifact_path: docs/downloaded
+
+      - name: Publish to Dev portal
+        if: ${{ inputs.project_type == 'python' }}
+        uses: p2arthur/algokit-shared-config-forked/.github/actions/devportal-publish-docs@main
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
