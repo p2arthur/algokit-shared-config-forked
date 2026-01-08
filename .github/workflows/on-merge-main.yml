@@ -28,6 +28,10 @@ jobs:
     secrets: inherit
 
   build-check-publish-docs:
+    if: |
+      always() && 
+      (needs.typescript-ci.result == 'success' || needs.typescript-ci.result == 'skipped') &&
+      (needs.python-ci.result == 'success' || needs.python-ci.result == 'skipped')
     needs: [typescript-ci, python-ci]
     name: Build, Check and Publish Docs
     uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
