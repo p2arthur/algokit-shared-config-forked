@@ -27,11 +27,3 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  build-check-publish-docs:
-    needs: node-ci
-    name: Build, Check and Publish Docs
-    uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
-    with:
-      project_type: "typescript"
-    secrets: inherit # Added to ensure docs build has access to tokens if needed

@@ -50,13 +50,3 @@ jobs:
         with:
           name: package
           path: dist/
-
-  # --- NEW: Docs Generation ---
-  build-docs:
-    name: Build and Check Docs
-    needs: ci_check
-    # Calling your shared documentation workflow
-    uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
-    with:
-      project_type: python
-    secrets: inherit

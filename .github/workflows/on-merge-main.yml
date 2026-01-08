@@ -27,6 +27,14 @@ jobs:
     uses: p2arthur/algokit-shared-config-forked/.github/workflows/ci-python.yml@main
     secrets: inherit
 
+  build-check-publish-docs:
+    needs: node-ci
+    name: Build, Check and Publish Docs
+    uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
+    with:
+      project_type: ${{ inputs.project_type }}
+    secrets: inherit
+
   release:
     name: Release Package
     needs: [typescript-ci, python-ci]
