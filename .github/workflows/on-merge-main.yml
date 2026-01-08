@@ -28,7 +28,6 @@ jobs:
     secrets: inherit
 
   build-check-publish-docs:
-    needs: node-ci
     name: Build, Check and Publish Docs
     uses: p2arthur/algokit-shared-config-forked/.github/workflows/build-and-publish-docs.yml@main
     with:
