@@ -25,7 +25,6 @@ runs:
       with:
         node-version: 20
 
-    # 1. Install all release tools INTO the action directory
     - name: Install Release Tools
       shell: bash
       working-directory: ${{ github.action_path }}
@@ -41,10 +40,9 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
-        # This is the magic fix for the "Module Not Found" error
         NODE_PATH: ${{ github.action_path }}/node_modules
       run: |
-        # Select config based on project type
+       
         if [ "${{ inputs.project_type }}" == "python" ]; then
           # Use the relative path to the shared config inside your repo
           CONFIG="--extends ${{ github.action_path }}/.releaserc.python.json"
@@ -56,7 +54,6 @@ runs:
         # Run the local binary we just installed
         ${{ github.action_path }}/node_modules/.bin/semantic-release $CONFIG
 
-    # 2. Python-specific post-release (Publishing)
     - name: Poetry Publish
       if: ${{ inputs.project_type == 'python' }}
       shell: bash
@@ -64,7 +61,6 @@ runs:
         POETRY_PYPI_TOKEN_PYPI: ${{ inputs.PYPI_TOKEN }}
       run: |
         pipx install poetry
-        # Get the new tag created by semantic-release
         NEW_TAG=$(git describe --tags --abbrev=0 | sed 's/v//')
         poetry version $NEW_TAG
         poetry build

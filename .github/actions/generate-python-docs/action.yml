@@ -27,13 +27,12 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        poetry install --with dev,docs  # Assumes you have a 'docs' group in pyproject.toml
+        poetry install --with dev,docs
 
     - name: Build Sphinx Docs
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        # Adjust 'make html' if your build command differs
         poetry run sphinx-build -b html ${{ inputs.docs-directory }} ${{ inputs.docs-directory }}/_build/html
 
     - name: Upload Documentation Artifact

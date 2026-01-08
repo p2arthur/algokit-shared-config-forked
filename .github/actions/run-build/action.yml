@@ -22,13 +22,11 @@ runs:
       run: ${{ inputs.pre-run-script }}
       working-directory: ${{ inputs.working-directory }}
 
-    # Uses the security pattern from the original workflow
     - name: ⬇️ Install Dependencies (npm ci --ignore-scripts)
       shell: bash
       run: npm ci --ignore-scripts
       working-directory: ${{ inputs.working-directory }}
       env:
-        # Pass the token for any CDK or infrastructure steps that may run npm ci
         NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
 
     - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)

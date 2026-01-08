@@ -1,4 +1,4 @@
-name: "Build Typedoc Documentation"
+name: Build Typedoc Documentation
 description: "Checks out code, installs dependencies, and runs the documentation build command."
 
 runs:
@@ -16,18 +16,11 @@ runs:
       run: npm install
       shell: bash
 
-    # - name: Generate Dynamic TypeDoc Config
-    #   shell: bash
-    #   run: node "${{ github.action_path }}/generate-typedoc-config.js"
-
     - name: Generate Docs
       working-directory: ${{ github.workspace }}
       shell: bash
       run: |
         echo "🚀 Installing tools on-the-fly and generating docs..."
-
-        # npx installs these packages into a temporary cache.
-        # It runs inside the workspace, so it finds your 'typedoc.json' and 'tsconfig.json' automatically.
         npx --yes \
           -p typescript \
           -p typedoc@^0.28.15 \
