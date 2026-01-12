@@ -1,32 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/actions/release-package"
-    schedule:
-      interval: "weekly"
-    groups:
-      release-tools:
-        patterns: ["semantic-release", "@semantic-release/*"]
-    labels:
-      - "dependencies"
-      - "npm"
-
-  - package-ecosystem: "npm"
-    directory: "/actions/generate-typescript-docs"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "npm"
-
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-tools:
-        patterns: ["python-semantic-release", "pytest", "black", "ruff"]
-
+  # 1. GitHub Actions (Checks your .github/workflows/ folder)
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -38,3 +12,44 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+
+  # 2. NPM - Release Package Tooling
+  - package-ecosystem: "npm"
+    directory: "/.github/actions/release-package"
+    schedule:
+      interval: "weekly"
+    groups:
+      release-tools:
+        patterns:
+          - "semantic-release"
+          - "@semantic-release/*"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # 3. NPM - TypeScript Docs Tooling
+  - package-ecosystem: "npm"
+    directory: "/.github/actions/generate-typescript-docs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # 4. NPM - Node CI Tooling
+  - package-ecosystem: "npm"
+    directory: "/.github/actions/node-ci"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # 5. NPM - Hidden Root Manifest
+  - package-ecosystem: "npm"
+    directory: "/.github"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
