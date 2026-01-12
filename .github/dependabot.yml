@@ -1,16 +1,20 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directories:
-      - "/actions/release-package"
-      - "/actions/generate-typescript-docs"
+    directory: "/actions/release-package"
     schedule:
       interval: "weekly"
     groups:
       release-tools:
-        patterns:
-          - "semantic-release"
-          - "@semantic-release/*"
+        patterns: ["semantic-release", "@semantic-release/*"]
+    labels:
+      - "dependencies"
+      - "npm"
+
+  - package-ecosystem: "npm"
+    directory: "/actions/generate-typescript-docs"
+    schedule:
+      interval: "weekly"
     labels:
       - "dependencies"
       - "npm"
