@@ -34,7 +34,8 @@ runs:
       working-directory: ${{ github.workspace }}/${{ inputs.working-directory }}
       run: |
         TOOLING_DIR="${{ github.action_path }}"
-        poetry --directory "$TOOLING_DIR" run sphinx-build -b html ${{ inputs.docs-directory }} ${{ inputs.docs-directory }}/_build/html
+        VENV_PATH="$(poetry --directory "$TOOLING_DIR" env info --path)"
+        "$VENV_PATH/bin/sphinx-build" -b html ${{ inputs.docs-directory }} ${{ inputs.docs-directory }}/_build/html
 
     - name: Upload Documentation Artifact
       uses: actions/upload-artifact@v4
