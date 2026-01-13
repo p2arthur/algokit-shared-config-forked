@@ -9,6 +9,7 @@ package-mode = false
 python = "^3.12"
 sphinx = "^8.1.0"
 myst-parser = "^4.0.0"
+sphinx-copybutton = "^0.5.2"
 
 [build-system]
 requires = ["poetry-core"]
