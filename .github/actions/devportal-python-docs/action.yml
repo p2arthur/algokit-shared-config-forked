@@ -1,0 +1,31 @@
+name: Publish to Algorand Developer Portal
+description: "Takes pre-built HTML documentation and pushes it to the DevPortal distribution branch."
+
+inputs:
+  docs_path:
+    description: "The directory containing the built HTML (e.g., docs_dist)"
+    required: true
+    default: "docs_dist"
+  docs_branch:
+    description: "Name of the branch to publish the docs to"
+    required: false
+    default: "docs-dist"
+  github_token:
+    description: "GitHub token for authentication"
+    required: true
+  guides_path:
+    description: "Location of handwritten guides (relative to repo root)"
+    required: false
+    default: "docs/guides"
+
+runs:
+  using: composite
+  steps:
+    - name: Publish to DevPortal Branch
+      id: publish
+      uses: algorandfoundation/algokit-shared-config/.github/actions/devportal-publish-docs-core@chore/separate-actions
+      with:
+        docs_path: ${{ inputs.docs_path }}
+        docs_branch: ${{ inputs.docs_branch }}
+        github_token: ${{ inputs.github_token }}
+        guides_path: ${{ inputs.guides_path }}

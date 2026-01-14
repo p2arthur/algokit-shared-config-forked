@@ -1,30 +1,26 @@
 name: Build Typedoc Documentation
-description: "Checks out code, installs dependencies, and runs the documentation build command."
+description: "Generates documentation using internal Typedoc configuration."
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
-
     - name: Use Node.js 22.x
       uses: actions/setup-node@v4
       with:
         node-version: 22.x
-    - name: Npm install
-      working-directory: ${{ github.action_path }}
-      run: npm install
-      shell: bash
 
     - name: Generate Docs
       working-directory: ${{ github.workspace }}
       shell: bash
       run: |
-        echo "🚀 Installing tools on-the-fly and generating docs..."
+        echo "🚀 Generating TS docs using action-internal config..."
+        # We point --options to the file inside the action directory
+        # We point --out to the standardized docs_dist folder
         npx --yes \
           -p typescript \
           -p typedoc@^0.28.15 \
           -p typedoc-plugin-markdown@^4.9.0 \
           typedoc \
-            --options typedoc.json \
+            --options "${{ github.action_path }}/typedoc.json" \
+            --out "${{ github.workspace }}/docs_dist" \
             --plugin typedoc-plugin-markdown

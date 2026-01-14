@@ -4,63 +4,62 @@ on:
   workflow_call:
     inputs:
       project_type:
-        # Wrapped in quotes to handle the internal colon
         description: "The type of project: 'typescript' or 'python'"
         required: true
         type: string
     secrets:
       GH_TOKEN:
         required: true
-        description: "Token for publishing to the Dev portal"
 
-# Required for pages deployment
 permissions:
-  contents: read
+  contents: write # Needed if publishing to a branch
   pages: write
   id-token: write
 
 jobs:
-  build-docs:
+  build-and-prep:
     runs-on: ubuntu-latest
+    env:
+      # Standardize the build output location for the entire job
+      DOCS_OUTPUT: "docs_dist"
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Build Typedoc Documentation
         if: ${{ inputs.project_type == 'typescript' }}
         uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-typescript-docs@main
+        # Ensure this action outputs to ${{ env.DOCS_OUTPUT }}
 
       - name: Build Sphinx Documentation
         if: ${{ inputs.project_type == 'python' }}
         uses: p2arthur/algokit-shared-config-forked/.github/actions/generate-python-docs@main
+        # Ensure this action outputs to ${{ env.DOCS_OUTPUT }}
 
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: github-pages-docs
-          # Kept as is, but if Dependabot still complains,
-          # consider the environment variable approach from my last message
-          path: ${{ inputs.project_type == 'python' && 'docs/_build/html' || 'docs/_html' }}
+          name: docs-bundle
+          path: ${{ env.DOCS_OUTPUT }}
           retention-days: 1
 
-  publish-docs:
-    needs: build-docs
+  publish:
+    needs: build-and-prep
     runs-on: ubuntu-latest
     steps:
       - name: Download Documentation Artifact
         uses: actions/download-artifact@v4
         with:
-          name: github-pages-docs
-          path: docs/downloaded
+          name: docs-bundle
+          path: site-content
 
-      - name: Deploy Documentation
+      - name: Deploy to GitHub Pages
         uses: p2arthur/algokit-shared-config-forked/.github/actions/publish-docs@main
         with:
-          artifact_path: docs/downloaded
+          artifact_path: site-content
 
-      - name: Publish to Dev portal
+      - name: Publish to Algorand DevPortal
         uses: p2arthur/algokit-shared-config-forked/.github/actions/devportal-publish-docs@main
         with:
           github_token: ${{ secrets.GH_TOKEN }}
+          docs_path: site-content
