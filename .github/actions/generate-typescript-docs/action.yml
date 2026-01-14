@@ -21,6 +21,6 @@ runs:
           -p typedoc@^0.28.15 \
           -p typedoc-plugin-markdown@^4.9.0 \
           typedoc \
-            --options "${{ github.action_path }}/typedoc.json" \
+            --options typedoc.json \
             --out "${{ github.workspace }}/docs_dist" \
             --plugin typedoc-plugin-markdown
