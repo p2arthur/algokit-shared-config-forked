@@ -24,7 +24,7 @@ jobs:
       DOCS_OUTPUT: "docs_dist"
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build Typedoc Documentation
         if: ${{ inputs.project_type == 'typescript' }}
@@ -37,7 +37,7 @@ jobs:
         # Ensure this action outputs to ${{ env.DOCS_OUTPUT }}
 
       - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: docs-bundle
           path: ${{ env.DOCS_OUTPUT }}
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Documentation Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: docs-bundle
           path: site-content
