@@ -1,3 +1,24 @@
+# AlgoKit Shared Workflow Experiments
+
+Fork of AlgoKit shared configuration for CI, documentation generation, release workflows, and developer-portal publishing experiments.
+
+This fork is used for workflow integration work. Action definitions and calling workflows are the primary artifacts; publishing requires the caller’s configured repository and environment.
+
+## Provenance
+
+This repository is a fork of [algorandfoundation/algokit-shared-config](https://github.com/algorandfoundation/algokit-shared-config). Upstream authorship and license terms apply to the retained source. The fork may differ from the upstream default branch; inspect its commit history when reviewing a specific implementation.
+
+## Explore the repository
+
+- [`.github/`](.github/)
+
+## Project documentation
+
+The existing guide below preserves the project-specific setup, examples, and credits. Its commands describe the checked-in project; no deployment or transaction is performed by reading this repository.
+
+<details>
+<summary>Read the project guide</summary>
+
 # Shared GitHub Actions Workflows
 
 This repository hosts reusable workflows and composite actions that standardize CI, docs, releases, and branch hygiene across projects. Below are the workflows you can call from other repositories, plus examples of how they are wired into `ref-subscriber-ts` and `ref-subscriber-py`.
@@ -126,3 +147,9 @@ jobs:
 - `NPM_TOKEN`: Needed for npm installs/publishing in TypeScript flows.
 - `GITHUB_TOKEN`: Default token; can be passed through as `GH_TOKEN` if you grant the workflow required permissions.
 - `PYPI_TOKEN` (optional): Only needed when publishing Python packages via semantic-release + Poetry.
+
+</details>
+
+## License
+
+See [LICENSE](LICENSE) for license terms and attribution.
